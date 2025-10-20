@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 import numpy as np
+from scipy.spatial import cKDTree
 
 
 class Modis_data_loader:
@@ -123,3 +124,52 @@ def combine_the_data_frames(df_1, df_2):
         return df_final
     else:
         print("check the data frames")
+
+
+class Training_data_loader:
+    def __init__(self, AOD_data_1, Aod_data_2, AOD_data_3, Pm_data, stn_data):
+        self.AOD_data_1 = AOD_data_1
+        self.Aod_data_2 = Aod_data_2
+        self.AOD_data_3 = AOD_data_3
+        self.Pm_data = Pm_data
+        self.stn_data = stn_data
+
+    # Step 1 we will fuse the AOD data
+
+    def AOD_data_fusion(self):
+        AOD_data_1 = self.AOD_data_1
+        AOD_data_2 = self.Aod_data_2.drop(["latitude", "longitude"], axis=1)
+        AOD_data_3 = self.AOD_data_3.drop(["latitude", "longitude"], axis=1)
+        AOD_final = pd.concat([AOD_data_1, AOD_data_2, AOD_data_3], axis=1)
+        return AOD_final
+
+    # second step is to find the nearest neighbours of the PM2.5 data points from the AOD data points.
+
+    def PM25_nearest_neighbour_finder(self, AOD_final):
+        stn_cordinates = self.stn_data[["latutude", "longitude"]].values
+
+        AOD_cordinates = self.AOD_data_1[["latitude", "longitude"]].values
+
+        # creating the ckd tree of the AOD cordinates.
+        CKD_tree = cKDTree(AOD_cordinates)
+
+        # Now we will find the nearest    neighbours AOD data points for the PM2.5 data points.
+        dist, indx = CKD_tree.query(stn_cordinates, k=1)
+        nearest_neighbours = AOD_final.iloc[indx].reset_index(drop=True)
+        nearest_neighbours = pd.DataFrame(nearest_neighbours)
+        return nearest_neighbours
+
+    def data_cleaning_and_missing_values_handeling(self, nearest_neighbours):
+        # Handling duplicated columns by averaging their values
+        duplicated_columns = nearest_neighbours.columns[
+            nearest_neighbours.columns.duplicated()
+        ].unique()
+
+        for col in duplicated_columns:
+            cols_to_average = nearest_neighbours.loc[:, col]
+            averaged_col = cols_to_average.mean(axis=1)
+            nearest_neighbours[col] = averaged_col
+
+        nearest_neighbours = nearest_neighbours.loc[
+            :, ~nearest_neighbours.columns.duplicated()
+        ]

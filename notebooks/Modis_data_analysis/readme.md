@@ -147,5 +147,10 @@ For spatial_dimension:
 Building a NN Tree in which the center nodes will be the PM2.5 nodes and surrounding nodes will be AOD nodes. 
 
 
-
 ```
+
+## KD tree :
+
+K : dimension of the space where the dataset has been organized.
+
+
