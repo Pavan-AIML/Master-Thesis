@@ -8,7 +8,7 @@ class Modis_data_loader:
     def __init__(
         self,
         file_name,
-        folder_root_dir="/Users/pavankumar/Documents/Winter_Thesis/Coding_Learning/Thesis/src/data/data_files",
+        folder_root_dir="/Users/pavankumar/Documents/Winter_Thesis/Coding_Learning/Master-Thesis/src/data/data_files",
     ):
         """
         Initialize the DataLoaderAnalysis with a file name and root directory.
@@ -93,7 +93,7 @@ class PM_25_dataloader:
     def __init__(
         self,
         filename="PM_2.5_Data/3_hr_data_Sept_2023_v1.npy",
-        folder_root_dir="/Users/pavankumar/Documents/Winter_Thesis/Coding_Learning/Thesis/src/data/data_files",
+        folder_root_dir="/Users/pavankumar/Documents/Winter_Thesis/Coding_Learning/Master-Thesis/src/data/data_files",
     ):
         self.filename = filename
         self.folder_root_dir = folder_root_dir
@@ -105,6 +105,8 @@ class PM_25_dataloader:
             return self.data[:, :, 0].T.shape
         else:
             raise ValueError("Data not loaded properly.")
+
+    # As shown in the file this is 3 hours data, hence to get the daily data we will have to take the mean of each 8 time slots to get the daily data.
 
     def get_data(self):
         if self.data is not None:
@@ -133,10 +135,24 @@ class Training_data_loader:
     def daily_PM25_data_extraction(self):
         daily_data = []
         data = np.array(self.Pm_data)
-        for i in range(8760 // 24):
-            nw = np.mean(data[:, i * 24 : (i + 1) * 24], axis=1)
+        for i in range(8760 // 8):
+            nw = np.mean(data[:, i * 8 : (i + 1) * 8], axis=1)
             daily_data.append(nw)
-        daily_PM_data = pd.DataFrame(daily_data)
+            # here daily data is a list hence we need to convert it to the numpy array
+        daily_data = np.array(daily_data)
+
+        # creating the date range to change the columns of the PM data frame
+
+        date_range = pd.date_range(
+            start="2020-01-01 00:00", end="2022-12-30 23:30", freq="1d"
+        )
+
+        daily_PM_data = pd.DataFrame(
+            daily_data,
+            index=date_range,
+            columns=[f"Column{i + 1}" for i in range(daily_data.shape[1])],
+        )
+
         return daily_PM_data.T
 
         # assuming each day has 8 time slots
@@ -190,77 +206,58 @@ class Training_data_loader:
         results = []
         # Ensure date columns are datetime in both DataFrames
         date_columns = nearest_neighbours.columns[2:]
-        nearest_neighbours = nearest_neighbours.copy()  # Avoid modifying original
+        # Avoid modifying original
         nearest_neighbours.columns = ["latitude", "longitude"] + [
             pd.to_datetime(col) for col in date_columns
         ]
-
-        # Ensure daily_PM_data columns are datetime
-        daily_PM_data = daily_PM_data.copy()
-        daily_PM_data.columns = [pd.to_datetime(col) for col in daily_PM_data.columns]
-
-        # Verify index alignment
-        if not nearest_neighbours.index.equals(daily_PM_data.index):
-            # Align indices (assuming same locations, different order)
-            daily_PM_data = daily_PM_data.reindex(nearest_neighbours.index)
-            if daily_PM_data.isna().all().all():
-                raise ValueError(
-                    "Index alignment failed: No matching indices between nearest_neighbours and daily_PM_data"
-                )
-
         for index, row in nearest_neighbours.iterrows():
             latitude = row["latitude"]
             longitude = row["longitude"]
             # Iterate over date columns, not row.index
-            for date_col in nearest_neighbours.columns[2:]:
-                aod_val = row[date_col]
-                if pd.isna(aod_val):
-                    continue
-                try:
-                    # Use loc for label-based indexing to handle non-integer indices
-                    pm_val = daily_PM_data.loc[index, date_col]
-                except (KeyError, IndexError):
-                    continue
-                if pd.isna(pm_val):
-                    continue
-                results.append(
-                    {
-                        "latitude": latitude,
-                        "longitude": longitude,
-                        "date": date_col,
-                        "MODIS_AOD": aod_val,
-                        "PM25": pm_val,
-                    }
-                )
+            for col in row.index[2:]:
+                aod_val = row[col]
+                if pd.notnull(aod_val):
+                    date = pd.to_datetime(col)
+                    pm_val = daily_PM_data.iloc[index]
 
+                    # here we have done pm_val.index == col as we need to match the date o fnearest neighbour to the date of the Dialy_PM_data
+
+                    pm_val = pm_val.loc[(pm_val.index == col)]
+
+                    results.append(
+                        {
+                            "latitude": latitude,
+                            "longitude": longitude,
+                            "date": date,
+                            "AOD": aod_val,
+                            "PM2.5": pm_val.values[0],
+                        }
+                    )
         final_training_data = pd.DataFrame(results)
-        if final_training_data.empty:
-            print(
-                "Warning: No valid data points found. Check for missing values or index/column mismatches."
-            )
+
         return final_training_data
 
     def prepare_final_trainig_data(self):
         print("Extracting daily Pm2.5 data..")
         daily_PM_data = self.daily_PM25_data_extraction()
-        print("✅ daily_PM_data shape:", daily_PM_data.shape)
+        print(" daily_PM_data shape:", daily_PM_data.shape)
         print("Fusing AOD data from multiple years...")
         AOD_final = self.AOD_data_fusion()
-        print("✅ AOD_final shape:", AOD_final.shape)
+        print(" AOD_final shape:", AOD_final.shape)
         print("Finding nearest neighbours for PM2.5 stations...")
         nearest_neighbours = self.PM25_nearest_neighbour_finder(AOD_final)
-        print("✅ nearest_neighbours shape:", nearest_neighbours.shape)
+        print("nearest_neighbours shape:", nearest_neighbours.shape)
         print("Cleaning data and handling missing values...")
         nearest_neighbours = self.data_cleaning_and_missing_values_handeling(
             nearest_neighbours
         )
-        print("✅ Cleaned nearest_neighbours shape:", nearest_neighbours.shape)
+        print("Cleaned nearest_neighbours shape:", nearest_neighbours.shape)
 
         print("Preparing final training data...")
         final_training_data = self.get_final_training_data(
             nearest_neighbours, daily_PM_data
         )
-        print("✅ final_training_data shape:", final_training_data.shape)
+        print("final_training_data shape:", final_training_data.shape)
 
         return final_training_data
 
