@@ -102,7 +102,7 @@ class PM_25_dataloader:
 
     def get_shape(self):
         if self.data is not None:
-            return self.data.T.shape
+            return self.data[:, :, 0].T.shape
         else:
             raise ValueError("Data not loaded properly.")
 
@@ -118,14 +118,6 @@ class PM_25_dataloader:
             raise ValueError("Data not loaded properly.")
 
 
-def combine_the_data_frames(df_1, df_2):
-    if df_1 is not None and df_2 is not None:
-        df_final = pd.concat([df_1, df_2], axis=1)
-        return df_final
-    else:
-        print("check the data frames")
-
-
 class Training_data_loader:
     def __init__(self, AOD_data_1, Aod_data_2, AOD_data_3, Pm_data, stn_data):
         self.AOD_data_1 = AOD_data_1
@@ -134,7 +126,20 @@ class Training_data_loader:
         self.Pm_data = Pm_data
         self.stn_data = stn_data
 
-    # Step 1 we will fuse the AOD data
+    # Step 1 to match the tempoaral dimension we will use the daily PM2.5 data extraction method.
+
+    ## daily_PM25_data_extraction here I have considered that each day has 24 time slots.
+
+    def daily_PM25_data_extraction(self):
+        daily_data = []
+        data = np.array(self.Pm_data)
+        for i in range(8760 // 24):
+            nw = np.mean(data[:, i * 24 : (i + 1) * 24], axis=1)
+            daily_data.append(nw)
+        daily_PM_data = pd.DataFrame(daily_data)
+        return daily_PM_data.T
+
+        # assuming each day has 8 time slots
 
     def AOD_data_fusion(self):
         AOD_data_1 = self.AOD_data_1
@@ -146,7 +151,7 @@ class Training_data_loader:
     # second step is to find the nearest neighbours of the PM2.5 data points from the AOD data points.
 
     def PM25_nearest_neighbour_finder(self, AOD_final):
-        stn_cordinates = self.stn_data[["latutude", "longitude"]].values
+        stn_cordinates = self.stn_data[["Latitude", "Longitude"]].values
 
         AOD_cordinates = self.AOD_data_1[["latitude", "longitude"]].values
 
@@ -155,7 +160,12 @@ class Training_data_loader:
 
         # Now we will find the nearest    neighbours AOD data points for the PM2.5 data points.
         dist, indx = CKD_tree.query(stn_cordinates, k=1)
-        nearest_neighbours = AOD_final.iloc[indx].reset_index(drop=True)
+
+        """
+        Check this line here in this I think AOD_final.iloc[indx, :] : will also come here. Why we are converting the AOD final again in pandas data frame ? we are inserting the pandas data frame only 
+        """
+
+        nearest_neighbours = AOD_final.iloc[indx, :].reset_index(drop=True)
         nearest_neighbours = pd.DataFrame(nearest_neighbours)
         return nearest_neighbours
 
@@ -170,6 +180,97 @@ class Training_data_loader:
             averaged_col = cols_to_average.mean(axis=1)
             nearest_neighbours[col] = averaged_col
 
+        # nearest neighbours are the data which contains all the AOD values nearest to the PM2.5 values
         nearest_neighbours = nearest_neighbours.loc[
             :, ~nearest_neighbours.columns.duplicated()
         ]
+        return nearest_neighbours
+
+    def get_final_training_data(self, nearest_neighbours, daily_PM_data):
+        results = []
+        # Ensure date columns are datetime in both DataFrames
+        date_columns = nearest_neighbours.columns[2:]
+        nearest_neighbours = nearest_neighbours.copy()  # Avoid modifying original
+        nearest_neighbours.columns = ["latitude", "longitude"] + [
+            pd.to_datetime(col) for col in date_columns
+        ]
+
+        # Ensure daily_PM_data columns are datetime
+        daily_PM_data = daily_PM_data.copy()
+        daily_PM_data.columns = [pd.to_datetime(col) for col in daily_PM_data.columns]
+
+        # Verify index alignment
+        if not nearest_neighbours.index.equals(daily_PM_data.index):
+            # Align indices (assuming same locations, different order)
+            daily_PM_data = daily_PM_data.reindex(nearest_neighbours.index)
+            if daily_PM_data.isna().all().all():
+                raise ValueError(
+                    "Index alignment failed: No matching indices between nearest_neighbours and daily_PM_data"
+                )
+
+        for index, row in nearest_neighbours.iterrows():
+            latitude = row["latitude"]
+            longitude = row["longitude"]
+            # Iterate over date columns, not row.index
+            for date_col in nearest_neighbours.columns[2:]:
+                aod_val = row[date_col]
+                if pd.isna(aod_val):
+                    continue
+                try:
+                    # Use loc for label-based indexing to handle non-integer indices
+                    pm_val = daily_PM_data.loc[index, date_col]
+                except (KeyError, IndexError):
+                    continue
+                if pd.isna(pm_val):
+                    continue
+                results.append(
+                    {
+                        "latitude": latitude,
+                        "longitude": longitude,
+                        "date": date_col,
+                        "MODIS_AOD": aod_val,
+                        "PM25": pm_val,
+                    }
+                )
+
+        final_training_data = pd.DataFrame(results)
+        if final_training_data.empty:
+            print(
+                "Warning: No valid data points found. Check for missing values or index/column mismatches."
+            )
+        return final_training_data
+
+    def prepare_final_trainig_data(self):
+        print("Extracting daily Pm2.5 data..")
+        daily_PM_data = self.daily_PM25_data_extraction()
+        print("✅ daily_PM_data shape:", daily_PM_data.shape)
+        print("Fusing AOD data from multiple years...")
+        AOD_final = self.AOD_data_fusion()
+        print("✅ AOD_final shape:", AOD_final.shape)
+        print("Finding nearest neighbours for PM2.5 stations...")
+        nearest_neighbours = self.PM25_nearest_neighbour_finder(AOD_final)
+        print("✅ nearest_neighbours shape:", nearest_neighbours.shape)
+        print("Cleaning data and handling missing values...")
+        nearest_neighbours = self.data_cleaning_and_missing_values_handeling(
+            nearest_neighbours
+        )
+        print("✅ Cleaned nearest_neighbours shape:", nearest_neighbours.shape)
+
+        print("Preparing final training data...")
+        final_training_data = self.get_final_training_data(
+            nearest_neighbours, daily_PM_data
+        )
+        print("✅ final_training_data shape:", final_training_data.shape)
+
+        return final_training_data
+
+
+# All the functions those are used for the analysis of the data frames and also the analysis.
+
+
+def combine_the_data_frames(df_1, df_2):
+    if df_1 is not None and df_2 is not None:
+        df_final = pd.concat([df_1, df_2], axis=1)
+        return df_final
+    else:
+        print("check the data frames")

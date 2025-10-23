@@ -1,0 +1,65 @@
+.
+├── __init__.py
+├── checkpoints
+├── configs
+├── docker
+│   ├── Dockerfile
+│   └── entrypoint.sh
+├── LICENSE
+├── notebooks
+│   ├── __init__.py
+│   └── Modis_data_analysis
+│       ├── __init__.py
+│       ├── __pycache__
+│       ├── data_loader_analysis.py
+│       ├── Modis_AOD_data_analysis.ipynb
+│       └── Readme.md
+├── Readme.md
+├── requirements.txt
+├── Research_papers.md
+├── results
+├── scripts
+│   ├── evaluate_pm40.sh
+│   ├── generate_missing_values.py
+│   ├── preprocess_data.py
+│   └── train_pm40.sh
+├── setup.py
+├── src
+│   ├── __init__.py
+│   ├── data
+│   │   ├── __init__.py
+│   │   ├── data_files
+│   │   ├── data_utils.py
+│   │   ├── pm40_dataset.py
+│   │   └── preprocessing.py
+│   ├── evaluation
+│   │   ├── __init__.py
+│   │   ├── evaluator.py
+│   │   └── uncertainty_analysis.py
+│   ├── main.py
+│   ├── Models
+│   │   ├── __init__.py
+│   │   ├── Decoder.py
+│   │   ├── Encoder.py
+│   │   ├── Image
+│   │   ├── Latent_encoder.py
+│   │   ├── neural_process.py
+│   │   └── readme.md
+│   ├── Subhojit_implementation
+│   │   └── copy_of_my_copy_modis_pm2_5_delhi_digitcap.py
+│   ├── training
+│   │   ├── __init__.py
+│   │   ├── loss_functions.py
+│   │   ├── metrics.py
+│   │   ├── optimizer_utils.py
+│   │   ├── readme.md
+│   │   └── trainer.py
+│   └── utils
+│       ├── __init__.py
+│       └── config.py
+├── structure.txt
+└── tests
+    ├── test_codes.py
+    └── test_functions.py
+
+19 directories, 44 files

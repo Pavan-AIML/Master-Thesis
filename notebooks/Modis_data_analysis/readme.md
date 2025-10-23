@@ -149,8 +149,73 @@ Building a NN Tree in which the center nodes will be the PM2.5 nodes and surroun
 
 ```
 
-## KD tree :
+## KD Tree :
 
 K : dimension of the space where the dataset has been organized.
 
 
+## Fuseed data frame creation 
+
+```js
+
+
+```
+
+## Final data frame creation.
+
+```js
+def get_final_training_data(self, nearest_neighbours, daily_PM_data):
+    results = []
+    # Ensure date columns are datetime in both DataFrames
+    date_columns = nearest_neighbours.columns[2:]
+    nearest_neighbours = nearest_neighbours.copy()  # Avoid modifying original
+    nearest_neighbours.columns = ["latitude", "longitude"] + [
+        pd.to_datetime(col) for col in date_columns
+    ]
+    # Ensure daily_PM_data columns are datetime
+    daily_PM_data = daily_PM_data.copy()
+    daily_PM_data.columns = [pd.to_datetime(col) for col in daily_PM_data.columns]
+    # Verify index alignment
+    if not nearest_neighbours.index.equals(daily_PM_data.index):
+        # Align indices (assuming same locations, different order)
+        daily_PM_data = daily_PM_data.reindex(nearest_neighbours.index)
+        if daily_PM_data.isna().all().all():
+            raise ValueError(
+                "Index alignment failed: No matching indices between nearest_neighbours and daily_PM_data"
+            )
+    for index, row in nearest_neighbours.iterrows():
+        latitude = row["latitude"]
+        longitude = row["longitude"]
+        # Iterate over date columns, not row.index
+        for date_col in nearest_neighbours.columns[2:]:
+            aod_val = row[date_col]
+            if pd.isna(aod_val):
+                continue
+            try:
+                # Use loc for label-based indexing to handle non-integer indices
+                pm_val = daily_PM_data.loc[index, date_col]
+            except (KeyError, IndexError):
+                continue
+            if pd.isna(pm_val):
+                continue
+            results.append(
+                {
+                    "latitude": latitude,
+                    "longitude": longitude,
+                    "date": date_col,
+                    "MODIS_AOD": aod_val,
+                    "PM25": pm_val,
+                }
+            )
+    final_training_data = pd.DataFrame(results)
+    if final_training_data.empty:
+        print(
+            "Warning: No valid data points found. Check for missing values or index/column mismatches."
+        )
+    return final_training_data
+
+
+    size of nearest_neighbours > (40, 1097 ) with index
+    size of daily PM data > (40, 365) with index 
+
+```

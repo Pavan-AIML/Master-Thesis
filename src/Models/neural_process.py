@@ -14,6 +14,7 @@ In this code we will be building the neural process network which will consist o
 
 
 class NeuralProcess(nn.Module):
+    
     def __init__(self, x_c_dim, y_c_dim, x_t_dim, y_t_dim, hidden_dim, latent_dim):
         super().__init__()
         self.x_c_dim = x_c_dim
