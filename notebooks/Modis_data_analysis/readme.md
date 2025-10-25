@@ -1,4 +1,4 @@
-# In this note book I have just tried to show how the inheritance works ?
+# In this note book I have explained all the steps taken to create the dat aloader using object oriented programing. 
 
 ```js
 
