@@ -234,6 +234,7 @@ class Training_data_loader:
                         }
                     )
         final_training_data = pd.DataFrame(results)
+        final_training_data["date"] = pd.to_datetime(final_training_data["date"])
 
         return final_training_data
 
@@ -271,3 +272,6 @@ def combine_the_data_frames(df_1, df_2):
         return df_final
     else:
         print("check the data frames")
+
+
+# Now

@@ -1,0 +1,60 @@
+# In this config.yaml file we will mention all the parameters used in our project. 
+
+
+experiments:
+  dataset_num: 1
+  model: MLP
+  exp_name: "aod_pm25_prediction"
+  input_type: 1
+  target_type: ["Pm2.5", 'AOD']
+
+# here we define the possible input feature combinations 
+
+feature_sets:
+  1: ['AOD','PM2.5', 'latitude', 'longitude']
+  2: ['AOD', 'latitude','longitude']
+  3: ['PM2.5', 'latitude', 'longitude']
+
+
+
+output_vars:  ['PM2.5', 'AOD']
+
+train:
+  batch_size: 32
+  epochs: 20
+  lr: 0.0001
+  hist_len: 1
+  pred_len: 1
+  weight_decay: 0.0005
+  early_stop: 10
+  test_size: 0.2
+  loss_fn: "MSELoss"
+  optimizer: "Adam"
+
+
+filepath:
+  local:
+    data_dir: 
+
+# total len of data set 15667
+
+dataset:
+            #  year, month, day, hour, minute
+  data_start: [[2020,1,3,0,0], GMT]
+            #  year, month, day, hour, minute
+  data_end: [[2022,12,30,0,0], GMT]
+
+# we have set the numbe r1 as we have just one data set and that we have devided in train, test, val datasets. 
+
+
+  1:              
+    train_start: [[2020, 1, 3], GMT]
+    train_end: [[2022, 5, 14], GMT]
+
+    val_start: [[2022, 5, 16], GMT]
+    val_end: [[2022, 9, 26], GMT]
+
+    test_start: [[2022, 9, 28], GMT]
+    test_end: [[2022, 12, 30], GMT]
+
+  
