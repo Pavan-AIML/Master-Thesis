@@ -5,19 +5,22 @@ experiments:
   dataset_num: 1
   model: MLP
   exp_name: "aod_pm25_prediction"
-  input_type: 1
-  target_type: ["Pm2.5", 'AOD']
+  input_type_1: 1
+  input_type_2: 2
+  input_type_3: 3 
+  target_type: ["PM2.5", 'AOD']
 
 # here we define the possible input feature combinations 
 
-feature_sets:
-  1: ['AOD','PM2.5', 'latitude', 'longitude']
-  2: ['AOD', 'latitude','longitude']
-  3: ['PM2.5', 'latitude', 'longitude']
+  
+  feature_sets:
+    1: ['latitude', 'longitude','AOD', 'PM2.5']
+    2: ['latitude', 'longitude','AOD']
+    3: ['latitude', 'longitude','PM2.5']
 
 
 
-output_vars:  ['PM2.5', 'AOD']
+output_vars:  ['AOD', 'PM2.5']
 
 train:
   batch_size: 32
@@ -47,13 +50,16 @@ dataset:
 # we have set the numbe r1 as we have just one data set and that we have devided in train, test, val datasets. 
 
 
-  1:              
+  1:            
+  # train data considered percent is 80 %   
     train_start: [[2020, 1, 3], GMT]
     train_end: [[2022, 5, 14], GMT]
 
+  # val data considered percent is 10 % 
     val_start: [[2022, 5, 16], GMT]
     val_end: [[2022, 9, 26], GMT]
 
+  # test data considered percent is 10 % 
     test_start: [[2022, 9, 28], GMT]
     test_end: [[2022, 12, 30], GMT]
 
