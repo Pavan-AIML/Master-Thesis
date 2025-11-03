@@ -36,6 +36,9 @@ class AirQualityDataset(Dataset):
         self.flag = flag
         # Here as we are taking the data from config file the number of data sets it will make our code to make it moduler to also accept more than one data set if we have in future.
         self.dataset_number = self.config["experiments"]["dataset_num"]
+
+        # This we use to extract the training, test and validation data sets dates in the given config file.
+
         ds_cfg = self.config["dataset"][self.dataset_number]
         # Select input and target in such as way that we can change it later to do the changes easily.
 

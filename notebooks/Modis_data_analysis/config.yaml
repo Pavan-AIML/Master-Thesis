@@ -3,7 +3,7 @@
 
 experiments:
   dataset_num: 1
-  model: MLP
+  # model: MLP
   exp_name: "aod_pm25_prediction"
   input_type_1: 1
   input_type_2: 2
@@ -35,11 +35,15 @@ train:
   optimizer: "Adam"
 
 
+# this section will come later.
+
 filepath:
   local:
     data_dir: 
 
 # total len of data set 15667
+
+# After exploring the data I found that the data start date and data end dates are below.
 
 dataset:
             #  year, month, day, hour, minute
@@ -47,7 +51,7 @@ dataset:
             #  year, month, day, hour, minute
   data_end: [[2022,12,30,0,0], GMT]
 
-# we have set the numbe r1 as we have just one data set and that we have devided in train, test, val datasets. 
+# we have set the numbe r1 as we have just one data set and that we have devided in train, val, test datasets. 
 
 
   1:            
