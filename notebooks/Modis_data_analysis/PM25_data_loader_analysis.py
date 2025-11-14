@@ -129,8 +129,7 @@ class Training_data_loader:
         self.stn_data = stn_data
 
     # Step 1 to match the tempoaral dimension we will use the daily PM2.5 data extraction method.
-
-    ## daily_PM25_data_extraction here I have considered that each day has 24 time slots.
+    # daily_PM25_data_extraction here I have considered that each day has 24 time slots.
 
     def daily_PM25_data_extraction(self):
         daily_data = []
@@ -138,7 +137,7 @@ class Training_data_loader:
         for i in range(8760 // 8):
             nw = np.mean(data[:, i * 8 : (i + 1) * 8], axis=1)
             daily_data.append(nw)
-            # here daily data is a list hence we need to convert it to the numpy array
+        # here daily data is a list hence we need to convert it to the numpy array
         daily_data = np.array(daily_data)
 
         # creating the date range to change the columns of the PM data frame
@@ -213,6 +212,7 @@ class Training_data_loader:
         for index, row in nearest_neighbours.iterrows():
             latitude = row["latitude"]
             longitude = row["longitude"]
+            
             # Iterate over date columns, not row.index
             for col in row.index[2:]:
                 aod_val = row[col]
@@ -220,7 +220,7 @@ class Training_data_loader:
                     date = pd.to_datetime(col)
                     pm_val = daily_PM_data.iloc[index]
 
-                    # here we have done pm_val.index == col as we need to match the date o fnearest neighbour to the date of the Dialy_PM_data
+# here we have done pm_val.index == col as we need to match the date of nearest neighbour to the date of the Dialy_PM_data
 
                     pm_val = pm_val.loc[(pm_val.index == col)]
 

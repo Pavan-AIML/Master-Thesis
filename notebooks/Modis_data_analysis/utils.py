@@ -9,6 +9,5 @@ yaml_path = os.path.join(folder_path, "config.yaml")
 with open("config.yaml", "r") as file:
     config = yaml.safe_load(file)
 
-
 print(config["experiments"])
 

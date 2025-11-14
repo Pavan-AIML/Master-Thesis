@@ -2,7 +2,10 @@
 
 
 experiments:
-  dataset_num: 1
+  dataset_num_1: 1
+  dataset_num_2: 2
+  dataset_num_3: 3
+
   # model: MLP
   exp_name: "aod_pm25_prediction"
   input_type_1: 1
@@ -13,12 +16,13 @@ experiments:
 # here we define the possible input feature combinations 
 
   
-  feature_sets:
+  input_vars:
     1: ['latitude', 'longitude','AOD', 'PM2.5']
     2: ['latitude', 'longitude','AOD']
     3: ['latitude', 'longitude','PM2.5']
 
 
+# feature_sets
 
 output_vars:  ['AOD', 'PM2.5']
 
