@@ -52,9 +52,9 @@ class AirQualityDataset(Dataset):
         if flag == "Train":
             a, b = "train_start", "train_end"
         elif flag == "Val":
-            a, b == "val_start", "val_end"
+            a, b = "val_start", "val_end"
         elif flag == "Test":
-            a, b == "test_start", "test_end"
+            a, b = "test_start", "test_end"
         else:
             raise ValueError("flag is not matching with Train, Val, Test")
         # let's define the functions

@@ -16,6 +16,8 @@ venv/
 # Ignore system files
 .DS_Store
 Thumbs.db
+Subhojit/Subhojit.ipynb
+
 
 # Ignore large datasets or raw data
 data/data_files

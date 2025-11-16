@@ -20,7 +20,7 @@ experiments:
     1: ['latitude', 'longitude','AOD', 'PM2.5']
     2: ['latitude', 'longitude','AOD']
     3: ['latitude', 'longitude','PM2.5']
-
+    4: ['latitude', 'longitude']
 
 # feature_sets
 
