@@ -3,3 +3,6 @@
 2. [cKDTree](https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.cKDTree.html?utm_source=chatgpt.com)
 
 3. [Neural Process](https://arxiv.org/pdf/1807.01622)
+
+4. [RBF Kernal](https://arxiv.org/pdf/1511.02222)
+

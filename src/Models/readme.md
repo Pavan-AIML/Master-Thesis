@@ -3,7 +3,7 @@
 ![](Image/download.png)
 ![](Image/ad_4nxc9e-fxwecmh3e_zz4vgeiokxpdjuhexeca3dzysa2cf-choq0uchs39pdlqai6pd7lsdau3ptrjs_nofsuem1whkrxfogviyvlmdsjw05xzfpsljmzdyddua_t9hdnrrhup0mqpw0fualz4sdfachhgbak.avif)
 
-### There are 4 different parts of theis architecture as given in the research paper [Neural_Process](https://arxiv.org/pdf/1807.01622) and [Variational Auto Encoder](https://www.datacamp.com/de/tutorial/variational-autoencoders)
+### There are 4 different parts of this architecture as given in the research paper [Neural_Process](https://arxiv.org/pdf/1807.01622) and [Variational Auto Encoder](https://www.datacamp.com/de/tutorial/variational-autoencoders)
  
 
 
