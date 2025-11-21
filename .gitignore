@@ -11,7 +11,7 @@ __pycache__/
 venv/
 .env/
 *.env
-
+.venv39/
 /copy_of_my_copy_modis_pm2_5_delhi_digitcap.py
 # Ignore system files
 .DS_Store

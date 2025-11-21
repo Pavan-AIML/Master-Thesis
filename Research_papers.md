@@ -6,3 +6,9 @@
 
 4. [RBF Kernal](https://arxiv.org/pdf/1511.02222)
 
+5. [Conditional Neural Process](https://arxiv.org/pdf/1910.13556)
+
+6. [Convolutional conditional neural processes for local climate](https://arxiv.org/pdf/2101.07950)
+
+7. [GEOGRAPHIC LOCATION ENCODING WITH SPHERICAL HARMONICS AND SINUSOIDal REPRESENTATION NETWORKS](https://arxiv.org/pdf/2310.06743)
+
