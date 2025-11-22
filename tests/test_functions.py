@@ -13,7 +13,7 @@ from pathlib import Path
 """
 ROOT = Path(__file__).resolve().parents[1]  # tests/ -> project root
 sys.path.insert(0, str(ROOT))
-
+print(ROOT)
 # importing the Modis data loader module
 from notebooks.Modis_data_analysis.PM25_data_loader_analysis import Modis_data_loader
 
@@ -21,7 +21,7 @@ from notebooks.Modis_data_analysis.PM25_data_loader_analysis import Training_dat
 
 
 # Importing the PM 2.5 data loader module
-from notebooks.Modis_data_analysis.data_loader_analysis import PM_25_dataloader
+from notebooks.Modis_data_analysis.PM25_data_loader_analysis import PM_25_dataloader
 
 # All the data sets for testing
 Modis_data_1 = Modis_data_loader("MODIS_AOD/merged_data_2018_sorted_dates.csv").data

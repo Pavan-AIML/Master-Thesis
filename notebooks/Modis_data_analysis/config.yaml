@@ -72,3 +72,9 @@ dataset:
     test_end: [[2022, 12, 30], GMT]
 
   
+Geo_spatial_Encoder:
+
+  dim_in: 100
+  dim_hidden: 256
+  dim_out: 8
+  num_layers: 128

@@ -154,7 +154,7 @@ Building a NN Tree in which the center nodes will be the PM2.5 nodes and surroun
 K : dimension of the space where the dataset has been organized.
 
 
-## Fuseed data frame creation 
+## Fused data frame creation 
 
 ```js
 
@@ -219,3 +219,36 @@ def get_final_training_data(self, nearest_neighbours, daily_PM_data):
     size of daily PM data > (40, 365) with index 
 
 ```
+
+
+## Latitude and longitude embedding creatiion :
+
+```js
+
+from locationencoder.final_location_encoder import Geospatial_Encoder
+
+
+"""
+Making instance of the Geospatial_Encoder
+"""
+
+# as the legendre polyomials of degree 10 hen the output of spherical harmonics will be 121
+# hence the input dimension to siren will be 121
+# hence we will take dim_in as 121
+# outpur dim is 4
+geospatial_encoder_instance = Geospatial_Encoder(
+    config["Geo_spatial_Encoder"]["dim_in"],
+    config["Geo_spatial_Encoder"]["dim_hidden"],
+    config["Geo_spatial_Encoder"]["dim_out"],
+    config["Geo_spatial_Encoder"]["num_layers"],
+)
+
+
+lonlat_embedding = geospatial_encoder_instance(lonlat)
+
+
+output : tensor([[-1.0904, -0.7417,  0.5193,  0.6430, -0.2383,  1.1459,  0.3127,  0.3621]],
+       grad_fn=<AddmmBackward0>)
+```
+
+
