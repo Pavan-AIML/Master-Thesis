@@ -122,18 +122,23 @@ final_training_data.shape
 
 Instance = AirQualityDataset(final_training_data, config)
 
+len(Instance)
 
-final_training_data = AirQualityDataset(final_training_data, config)
+final_torch_training_data = AirQualityDataset(final_training_data, config)
 
 
-lonlat = final_training_data.__getitem__(10)[0][0:2]
+lonlat = final_torch_training_data.__getitem__(10)[0][0:2]
 lonlat = lonlat.unsqueeze(0)
+lonlat
 
 # loading the torch data set
 
 # -------------************---------------------------------
 
+
 """
+Here we have made a small check if our location encoder is coverting the lat and long ot the embeddings and working fine. 
+
 our final training data is the data in which we will train our neural network model.
 
 """
@@ -160,3 +165,44 @@ geospatial_encoder_instance = Geospatial_Encoder(
 lonlat_embedding = geospatial_encoder_instance(lonlat)
 
 lonlat_embedding
+
+
+# -------------************---------------------------------
+
+"""
+Importing all the latitude and longitude coordinates of the stations all of them in one time. 
+
+"""
+
+
+from torch.utils.data import DataLoader
+
+torch_latlong_loader = DataLoader(
+    final_torch_training_data, batch_size=len(final_torch_training_data)
+)
+
+for input, output in torch_latlong_loader:
+    all_latlong = input[:, 0:2]
+    break
+
+# Here we have all the latitude and longitude
+
+all_latlong.shape
+
+
+# -------------************---------------------------------
+"""
+Converting all the latitude and longitude to the embeddings using the location encoder
+"""
+
+all_latitude_longitude_embeddings = geospatial_encoder_instance(all_latlong)
+
+
+all_latitude_longitude_embeddings
+
+
+# -------------************---------------------------------
+
+"""
+Now the final step is to get the final data is to add 
+"""
