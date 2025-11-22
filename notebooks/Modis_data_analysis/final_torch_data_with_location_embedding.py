@@ -126,7 +126,10 @@ len(Instance)
 
 final_torch_training_data = AirQualityDataset(final_training_data, config)
 
+final_torch_training_data.input_cols
+final_torch_training_data.target_cols
 
+final_torch_training_data.__getitem__(10)
 lonlat = final_torch_training_data.__getitem__(10)[0][0:2]
 lonlat = lonlat.unsqueeze(0)
 lonlat
@@ -181,8 +184,8 @@ torch_latlong_loader = DataLoader(
     final_torch_training_data, batch_size=len(final_torch_training_data)
 )
 
-for input, output in torch_latlong_loader:
-    all_latlong = input[:, 0:2]
+for inputs, outputs in torch_latlong_loader:
+    all_latlong = inputs[:, 0:2]
     break
 
 # Here we have all the latitude and longitude
@@ -206,3 +209,16 @@ all_latitude_longitude_embeddings
 """
 Now the final step is to get the final data is to add 
 """
+
+# Getting all the inputs form the input and output
+
+inputs
+outputs
+
+# Here the major changes will be in the input only
+
+final_inputs = torch.cat((all_latitude_longitude_embeddings, inputs[:, 2:]), dim=1)
+
+
+final_inputs[0]
+outputs[0]

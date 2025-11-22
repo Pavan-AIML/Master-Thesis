@@ -11,7 +11,7 @@ experiments:
   input_type_1: 1
   input_type_2: 2
   input_type_3: 3 
-  target_type: ["PM2.5", 'AOD']
+  target_type: ["AOD", "PM2.5"]
 
 # here we define the possible input feature combinations 
 

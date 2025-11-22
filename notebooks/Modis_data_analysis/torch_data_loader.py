@@ -16,6 +16,7 @@ from PM25_data_loader_analysis import Training_data_loader
 
 # here we will be building the class for getting our data in batches using torch data loader.
 # in the torch we need to define 2 items clearly __len__(), __getitem__()
+# config["output_vars"]# defining the output variable here.
 
 
 class AirQualityDataset(Dataset):
@@ -46,7 +47,8 @@ class AirQualityDataset(Dataset):
         # these are the input columns for the model
         self.input_cols = self.config["experiments"]["input_vars"][input_type_1]
         # these are the targets
-        self.target_cols = self.config["experiments"]["target_type"]
+        self.target_cols = self.config["output_vars"]
+
         # here we will select the range of the train, test and validation of data sets.
         # select date range
         if flag == "Train":
