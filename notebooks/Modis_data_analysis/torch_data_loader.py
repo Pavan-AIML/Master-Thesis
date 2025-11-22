@@ -9,10 +9,19 @@ import arrow  # to get time we use arrow.
 import yaml
 from utils import config
 
+import os
+from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[2]  # tests/ -> project root
+sys.path.insert(0, str(ROOT))
+print(ROOT)
+
 # importing packages from the earlier file.
-from PM25_data_loader_analysis import Modis_data_loader
-from PM25_data_loader_analysis import PM_25_dataloader
-from PM25_data_loader_analysis import Training_data_loader
+from notebooks.Modis_data_analysis.PM25_data_loader_analysis import Modis_data_loader
+from notebooks.Modis_data_analysis.PM25_data_loader_analysis import PM_25_dataloader
+from notebooks.Modis_data_analysis.PM25_data_loader_analysis import Training_data_loader
+
 
 # here we will be building the class for getting our data in batches using torch data loader.
 # in the torch we need to define 2 items clearly __len__(), __getitem__()
