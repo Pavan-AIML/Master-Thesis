@@ -10,12 +10,15 @@ from glob import glob
 from tqdm import tqdm
 import arrow
 from datetime import datetime
+
 # from utils.config import config
 from torch.utils.data import DataLoader
+
 ROOT = Path(__file__).resolve().parents[2]  # tests/ -> project root
 sys.path.insert(0, str(ROOT))
 print(ROOT)
 from notebooks.Modis_data_analysis.utils import config
+
 # -------------************---------------------------------
 # loading all the data loaders here we will load the final data in torch.
 from notebooks.Modis_data_analysis.PM25_data_loader_analysis import Modis_data_loader
@@ -31,6 +34,7 @@ from notebooks.Modis_data_analysis.torch_data_loader import (
     AirQualityDataset_latlon_PM25,
     AirQualityDataset_latlon,
 )
+
 # importing config files
 from notebooks.Modis_data_analysis.final_loader import (
     Final_Air_Quality_Dataset_pipeline_latlon_AOD_PM25,
@@ -109,4 +113,3 @@ final_data_latlong
 # training the model in different sdata sets and storing the weights.
 
 # -------------************--------------------------------
-
