@@ -1,6 +1,6 @@
 import torch
-from torch.nn import nn
-import torch.functionals as F
+import torch.nn as nn
+import torch.functional as F
 
 """
 In this modeule theh input will be target values of x & z values and output values will be the reconstructed y values with uncertainty so here we will not get deterministic values of y but it's distirbution mu and variance.

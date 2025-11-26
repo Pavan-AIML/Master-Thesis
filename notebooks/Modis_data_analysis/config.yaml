@@ -76,12 +76,13 @@ dataset:
 Geo_spatial_Encoder:
 
   dim_in: 100
-  dim_hidden: 256
-  dim_out: 8
-  num_layers: 128
+  dim_hidden: 128
+  dim_out: 126
+  num_layers: 6
 
 
 Trainig_parameters:
   seed: 42
   device: "cpu"  # "cuda" or "cpu"
+  
   

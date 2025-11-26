@@ -64,3 +64,7 @@ logs/
 Extrafiles/
 subhojit_experiments/
 
+Subhojit_folder/Subhojit.py
+Subhojit_folder/__pycache__/
+Subhojit_folder/Subhojit.ipynb
+Subhojit_folder/data/

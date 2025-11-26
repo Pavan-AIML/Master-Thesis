@@ -1,3 +1,7 @@
+"""
+Importing the necessary packages.............
+"""
+
 import os
 import torch
 import numpy as np
@@ -46,11 +50,8 @@ from notebooks.Modis_data_analysis.final_loader import (
 # Creating all the instance here
 
 instance_latlon_AOD_PM25 = Final_Air_Quality_Dataset_pipeline_latlon_AOD_PM25(config)
-
 instance_latlon_AOD = Final_Air_Quality_Dataset_pipeline_latlon_AOD(config)
-
 instance_latlon_PM25 = Final_Air_Quality_Dataset_pipeline_latlon_PM25(config)
-
 intance_latlon = Final_Air_Quality_Dataset_pipeline_latlon(config)
 
 
@@ -98,7 +99,7 @@ final_data_latlong[1][0]
 
 # -------------************--------------------------------
 """
-Final training data 
+Final training data.................
 """
 
 
@@ -113,3 +114,33 @@ final_data_latlong
 # training the model in different sdata sets and storing the weights.
 
 # -------------************--------------------------------
+
+# importing the model from model file.
+"""
+Importing the model................
+"""
+
+from Models.neural_process import NeuralProcess
+
+# self, x_c_dim, y_c_dim, x_t_dim, y_t_dim, hidden_dim, latent_dim
+# self, x_target_dim, z_dim, hidden_dim, y_target_dim
+# self, x_c_dim, y_c_dim, x_t_dim, y_t_dim, hidden_dim, latent_dim
+
+# Creating the models those are compatible with the all kinds of inputs.
+
+# -------------************---------------------------------
+
+"""
+Final models for training...........
+"""
+
+model_latlon_AOD_PM25 = NeuralProcess(128, 2, 128, 2, 128, 128)
+model_latlon_AOD = NeuralProcess(127, 2, 127, 2, 128, 128)
+model_latlon_PM25 = NeuralProcess(127, 2, 127, 2, 128, 128)
+model_latlon = NeuralProcess(126, 2, 127, 2, 128, 128)
+
+
+"""
+Here we will import the loss function...........
+"""
+

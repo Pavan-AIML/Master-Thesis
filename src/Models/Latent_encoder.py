@@ -1,6 +1,6 @@
 import torch
-from torch.nn import nn
-import torch.functionals as F
+import torch.nn as nn
+import torch.nn.functional as F
 
 """ 
 From here as we can see that the input to this module will be the output of the Encoder module which is r.
