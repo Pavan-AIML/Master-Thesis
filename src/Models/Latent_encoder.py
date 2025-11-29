@@ -18,4 +18,7 @@ class Latent_Encoder(nn.Module):
     def forward(self, r):
         mu = self.mu(r)
         log_var = self.log_var(r)
+        # vectors of latent dimension.
         return mu, log_var
+
+

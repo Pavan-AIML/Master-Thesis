@@ -19,19 +19,24 @@ class Decoder(nn.Module):
             nn.ReLU(),
             nn.Linear(self.hidden_dim, self.hidden_dim),
             nn.ReLU(),
-            nn.Linear(self.hidden_dim, self.y_target_dim * 2)  # Outputting both mean and log variance
+            nn.Linear(
+                self.hidden_dim, self.y_target_dim * 2
+            ),  # Outputting both mean and log variance
         )
-        
+
     def forward(self, x_target, z):
-        z = z.expand(-1, x_target.size(1), z.size(-1))  # Expanding z to match x_target's shape
+        z = z.expand(
+            -1, x_target.size(1), z.size(-1)
+        )  # Expanding z to match x_target's shape
         combined_input = torch.cat([x_target, z], dim=-1)
         output = self.net(combined_input)
         mu, log_var = output.chunk(2, dim=-1)  # Splitting into mean and log variance
-        var = torch.exp(2 * log_var)  # Ensuring variance is positive
+        var = torch.exp(log_var)  # Ensuring variance is positive
+        # vector of length of y_target and y_input dims
         return mu, var
+
 
 """
 From here the outputs will be the mean and variance of the reconstructed y values.
 Now we will work on building the neural process network.
 """
-

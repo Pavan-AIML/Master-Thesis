@@ -62,12 +62,14 @@ This is the mean function for all the representations r<sub>i</sub>
 
 ## <p align ="center"> $var = \exp^{(2*log\sigma)}$</p>
 
-## <p align = "center">$\mu = \mu$</p>
+## <p align ="center">$\mu = \mu$</p>
 
 
 ### As we can see above we have gained the mean and variance that provids us the target predicted values with some uncertainty. 
 
 ### Hence here we are not getting the deterministic values instead of that we are getting the distribution of the values. 
+
+## <p align ="center">$KL_{divergence} =- 0.5 * \sum_{i =1}^{z_{dim (or)latent-dim}}(1+log\sigma_i^2-\mu_i^2 - \sigma_i^2 -1)$</p>
 
 
 

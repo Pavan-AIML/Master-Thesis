@@ -6,15 +6,16 @@ import torch.nn.functional as F
 In this code we will work on the Encoder part the putput will be mean value of representations r for all input data points.
 """
 
+
 class Encoder(nn.Module):
-    def __init__(self, x_size, y_size, hidden_size):
+    def __init__(self, x_size, y_size, hidden_dim):
         super().__init__()
         self.input_size = x_size + y_size
-        self.hidden_size = hidden_size
+        self.hidden_dim = hidden_dim
         self.net = nn.Sequential(
-            nn.Linear(self.input_size,self.hidden_size),
+            nn.Linear(self.input_size, self.hidden_dim),
             nn.ReLU(),
-            nn.Linear(self.hidden_size, self.hidden_size)
+            nn.Linear(self.hidden_dim, self.hidden_dim),
         )
 
     # in this forward function we will convert our input to the lower dimension embeddings.
@@ -24,6 +25,7 @@ class Encoder(nn.Module):
         # Now we will pass this combined input through a linear layer to reduce its dimension.
         r_i = self.net(combined_input)
         r = torch.mean(r_i, dim=1)
+        # vector of dim = hidden dimension
         return r
 
 

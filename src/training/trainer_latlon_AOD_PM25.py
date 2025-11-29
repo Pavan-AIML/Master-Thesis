@@ -46,6 +46,11 @@ from notebooks.Modis_data_analysis.final_loader import (
     Final_Air_Quality_Dataset_pipeline_latlon_PM25,
     Final_Air_Quality_Dataset_pipeline_latlon,
 )
+
+# importing the loss function
+from training.loss_functions import LossFunctions
+
+
 # -------------************--------------------------------
 # Creating all the instance here
 
@@ -62,8 +67,8 @@ instance_latlon_AOD_PM25.PM_25_data()
 instance_latlon_AOD_PM25.training_data()
 instance_latlon_AOD_PM25.Torch_data()
 final_data_latlon_AOD_PM25 = instance_latlon_AOD_PM25.full_pipeline()
-final_data_latlon_AOD_PM25[0][0].shape
-final_data_latlon_AOD_PM25[1][0]
+final_data_latlon_AOD_PM25[0].shape
+final_data_latlon_AOD_PM25[1].shape
 
 # final data with latitude, longitude and AOD
 
@@ -73,7 +78,7 @@ instance_latlon_AOD.PM_25_data()
 instance_latlon_AOD.training_data()
 instance_latlon_AOD.Torch_data()
 final_data_latlong_AOD = instance_latlon_AOD.full_pipeline()
-final_data_latlong_AOD[0][0].shape
+final_data_latlong_AOD[0].shape
 final_data_latlong_AOD[1][0]
 
 # final data with latitude, longitude  and PM2.5
@@ -83,7 +88,7 @@ instance_latlon_PM25.PM_25_data()
 instance_latlon_PM25.training_data()
 instance_latlon_PM25.Torch_data()
 final_data_latlong_PM25 = instance_latlon_PM25.full_pipeline()
-final_data_latlong_PM25[0][0].shape
+final_data_latlong_PM25[0].shape
 final_data_latlong_PM25[1][0]
 
 # final data with latitude and longitude
@@ -93,7 +98,7 @@ intance_latlon.PM_25_data()
 intance_latlon.training_data()
 intance_latlon.Torch_data()
 final_data_latlong = intance_latlon.full_pipeline()
-final_data_latlong[0][0].shape
+final_data_latlong[0].shape
 final_data_latlong[1][0]
 
 
@@ -104,9 +109,9 @@ Final training data.................
 
 
 final_data_latlon_AOD_PM25
-final_data_latlong_AOD
-final_data_latlong_PM25
-final_data_latlong
+final_data_latlong_AOD[0].shape
+final_data_latlong_PM25[0].shape
+final_data_latlong[0].shape
 
 
 # -------------************--------------------------------
@@ -143,4 +148,5 @@ model_latlon = NeuralProcess(126, 2, 127, 2, 128, 128)
 """
 Here we will import the loss function...........
 """
-
+# self, beta, learning_rate, stepsize, Number_of_steps, device#
+# NLL = LossFunctions()

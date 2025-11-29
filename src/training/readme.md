@@ -17,7 +17,7 @@
 ## Hence from here we will try to solve this in some other way. Instead of maximizing this we will maximize it's lower bound. 
 
 
-## <p align = "center" > $\log p(y_t/x_t,x_c, y_c) \ge E_{q(z/x_T, y_T, x_C, y_C)}[\log p(y_T/x_T, z)]-D_{KL}(q(z/x_T, y_T, x_C, y_C)||p(z/x_C,y_C))$</p>
+## <p align = "center" > $\log p(y_t/x_t,x_c, y_c) \ge E_{q(z/x_T, y_T, x_C, y_C)}[\log p(y_T/x_T, z)]-D_{KL}(q(z / x_C, y_C)||p(z))$</p>
 
 ## <p align = "center" > $\log p(y_t/x_t,x_c, y_c) \ge ELBO$</p>
 
@@ -37,4 +37,14 @@
 ## Hence the loss :
 
 ## $L_{NP} =NLLH (Negative log liklihood) (- term will absorbe in this) + \beta * KL_{loss}$
+
+## We will se here the loss function, reconstruction Negative log Liklihood loss.
+
+
+## <p align = "center"> $NLL = 0.5 * \sum_{i=1}^{n} (y_i -u_{yi})^2 / \sigma_i^2 + \sum_{i=1}^{n} log(2 * \pi * \sigma_{y_i}^2)$</p>
+
+## [KL_Divergence](https://www.datacamp.com/tutorial/kl-divergence?utm_cid=19589720821&utm_aid=157156374951&utm_campaign=230119_1-ps-other~dsa~tofu_2-b2c_3-emea_4-prc_5-na_6-na_7-le_8-pdsh-go_9-nb-e_10-na_11-na&utm_loc=9061166-&utm_mtd=-c&utm_kw=&utm_source=google&utm_medium=paid_search&utm_content=ps-other~emea-en~dsa~tofu~tutorial~machine-learning&gad_source=1&gad_campaignid=19589720821&gbraid=0AAAAADQ9WsHcPUoVAsxPWU3nzTSP3Q_RE&gclid=CjwKCAiAraXJBhBJEiwAjz7MZeYTpHWrqM2nAdfOMdlOfiajMt4r-3BD5X5bReBEZfUOLVFF3X-ZExoCtV8QAvD_BwE)
+
+## <p align = "center"> $p(z) = \mathcal{N(\mu, \sigma^2 I)}$</p>
+## <p align = "center">$D_{KL}(p||q) = \sum_{i=1}^{n}$</p>
 
