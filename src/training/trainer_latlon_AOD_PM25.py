@@ -113,7 +113,7 @@ final_data_latlon_AOD_PM25[0].shape
 final_data_latlong_AOD[0].shape
 final_data_latlong_PM25[0].shape
 final_data_latlong[0].shape
-
+ 
 for i, t in enumerate(final_data_latlon_AOD_PM25):
     print(i, t.shape)
 # final data sets wit x, y in torch tensor form
@@ -173,8 +173,27 @@ Fourth class --: will validate the data set
 Fifth step --: will evaluate the model.
 
 """
-from trainer_all_classes import NeuralProcessDataset
-
-NeuralProcessDataset = NeuralProcessDataset(final_data_latlon_AOD_PM25)
 
 
+from optimizer_utils import NeuralProcessDataset
+from optimizer_utils import NeuralProcessTrainer
+
+# First data ser priority will be 
+raw_dataet = final_data_latlon_AOD_PM25
+trainer = NeuralProcessTrainer(
+    raw_dataset=final_data_latlon_AOD_PM25,   # [X, Y]
+    model_class=NeuralProcess,
+    loss_class=LossFunctions,
+    x_dim=128,
+    y_dim=2,
+    hidden_dim=128,
+    latent_dim=128,
+    train_ratio=0.7,              # 70% train
+    val_ratio=0.15,               # 15% val, 15% test
+    batch_size=32,
+    tasks_per_epoch=3000,
+    run_name="NP_latlon_AOD_PM25",
+    lr=1e-3,
+    beta=1.0,
+)
+model = trainer.train(epochs=100, log_pred_every=10)
