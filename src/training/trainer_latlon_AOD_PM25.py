@@ -21,6 +21,7 @@ from torch.utils.data import DataLoader
 ROOT = Path(__file__).resolve().parents[2]  # tests/ -> project root
 sys.path.insert(0, str(ROOT))
 print(ROOT)
+
 from notebooks.Modis_data_analysis.utils import config
 
 # -------------************---------------------------------
@@ -108,10 +109,18 @@ Final training data.................
 """
 
 
-final_data_latlon_AOD_PM25
+final_data_latlon_AOD_PM25[0].shape
 final_data_latlong_AOD[0].shape
 final_data_latlong_PM25[0].shape
 final_data_latlong[0].shape
+
+for i, t in enumerate(final_data_latlon_AOD_PM25):
+    print(i, t.shape)
+# final data sets wit x, y in torch tensor form
+final_data_latlon_AOD_PM25
+final_data_latlong_AOD
+final_data_latlong_PM25
+final_data_latlong
 
 
 # -------------************--------------------------------
@@ -149,4 +158,23 @@ model_latlon = NeuralProcess(126, 2, 127, 2, 128, 128)
 Here we will import the loss function...........
 """
 # self, beta, learning_rate, stepsize, Number_of_steps, device#
-# NLL = LossFunctions()
+NLL = LossFunctions()
+
+
+"""
+Now we have model, loss function, data from here we can build the model trainer that will train the model with the tensor board.
+
+The first & second class --: will devide the data in to chunks and also train, val and test this will create a final data loader. 
+
+Third class --: this class will create the loop for train the network. 
+
+Fourth class --: will validate the data set 
+
+Fifth step --: will evaluate the model.
+
+"""
+from trainer_all_classes import NeuralProcessDataset
+
+NeuralProcessDataset = NeuralProcessDataset(final_data_latlon_AOD_PM25)
+
+
