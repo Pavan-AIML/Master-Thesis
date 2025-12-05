@@ -7,7 +7,7 @@ import numpy as np
 from datetime import datetime
 import arrow  # to get time we use arrow.
 import yaml
-from utils import config
+
 
 import os
 from pathlib import Path
@@ -16,12 +16,20 @@ import sys
 ROOT = Path(__file__).resolve().parents[2]  # tests/ -> project root
 sys.path.insert(0, str(ROOT))
 print(ROOT)
+from notebooks.Modis_data_analysis.utils import config
 
 # importing packages from the earlier file.
 from notebooks.Modis_data_analysis.PM25_data_loader_analysis import Modis_data_loader
 from notebooks.Modis_data_analysis.PM25_data_loader_analysis import PM_25_dataloader
 from notebooks.Modis_data_analysis.PM25_data_loader_analysis import Training_data_loader
+from locationencoder.final_location_encoder import Geospatial_Encoder
 
+# geospatial_encoder = Geospatial_Encoder(
+#     config["Geo_spatial_Encoder"]["dim_in"],
+#     config["Geo_spatial_Encoder"]["dim_hidden"],
+#     config["Geo_spatial_Encoder"]["dim_out"],
+#     config["Geo_spatial_Encoder"]["num_layers"],
+# )
 
 # here we will be building the class for getting our data in batches using torch data loader.
 # in the torch we need to define 2 items clearly __len__(), __getitem__()
@@ -39,7 +47,12 @@ class AirQualityDataset_latlon_AOD_PM25(Dataset):
         self.df = df
         self.config = config
         self.flag = flag
-
+        self.geospatial_encoder = Geospatial_Encoder(
+            config["Geo_spatial_Encoder"]["dim_in"],
+            config["Geo_spatial_Encoder"]["dim_hidden"],
+            config["Geo_spatial_Encoder"]["dim_out"],
+            config["Geo_spatial_Encoder"]["num_layers"],
+        )
         # Here as we are taking the data from config file the number of data sets it will make our code to make it moduler to also accept more than one data set if we have in future.
 
         self.dataset_number = self.config["experiments"]["dataset_num_1"]
@@ -76,6 +89,11 @@ class AirQualityDataset_latlon_AOD_PM25(Dataset):
             (self.df["date"] >= self.start_time) & (self.df["date"] <= self.end_time)
         ]
 
+        self.mean_AOD = self.data["AOD"].mean()
+        self.std_AOD = self.data["AOD"].std() + 1e-8
+        self.mean_PM25 = self.data["PM2.5"].mean()
+        self.std_PM25 = self.data["PM2.5"].std() + 1e-8
+
     def _get_time(self, time_yaml):
         # in this line the data set that will be passed will be
         arrow_time = arrow.get(datetime(*time_yaml[0]), time_yaml[1]).naive
@@ -101,6 +119,7 @@ class AirQualityDataset_latlon_AOD_PM25(Dataset):
             .values,
             dtype=torch.float32,
         )
+
         # all the numeric values should match the data type all should be similer data type
         y = torch.tensor(
             pd.to_numeric(data_rows[self.target_cols], errors="coerce")
@@ -108,6 +127,11 @@ class AirQualityDataset_latlon_AOD_PM25(Dataset):
             .values,
             dtype=torch.float32,
         )
+        # ['latitude', 'longitude','AOD', 'PM2.5']
+        x[2] = (x[2] - self.mean_AOD) / self.std_AOD
+        x[3] = (x[3] - self.mean_PM25) / self.std_PM25
+        y[0] = (y[0] - self.mean_AOD) / self.std_AOD
+        y[1] = (y[1] - self.mean_PM25) / self.std_PM25
         return x, y
 
 
@@ -363,3 +387,21 @@ class AirQualityDataset_latlon(Dataset):
             dtype=torch.float32,
         )
         return x, y
+
+
+import torch
+import pandas as pd
+
+df = pd.DataFrame([[1, 2, 3, 4], [5, 6, 7, 8]])
+df.columns = ["lat", "lon", "AOD", "PM25"]
+df
+tensor = torch.tensor([[1, 2, 3, 4], [5, 6, 7, 8]])
+
+x, y = tensor
+x[2] = 9
+y[2] = 10
+
+
+df_1 = df.iloc[0:2]
+# df_1[3] =df_1[3]/2
+df_1.iloc[0]

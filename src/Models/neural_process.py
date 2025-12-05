@@ -13,9 +13,9 @@ print(ROOT)
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from Models.Encoder import Encoder
-from Models.Latent_encoder import Latent_Encoder
-from Models.Decoder import Decoder
+from src.Models.Encoder import Encoder
+from src.Models.Latent_encoder import Latent_Encoder
+from src.Models.Decoder import Decoder
 
 
 """

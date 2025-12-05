@@ -49,7 +49,7 @@ from notebooks.Modis_data_analysis.final_loader import (
 )
 
 # importing the loss function
-from training.loss_functions import LossFunctions
+from loss_functions import LossFunctions
 
 
 # -------------************--------------------------------
@@ -67,10 +67,10 @@ instance_latlon_AOD_PM25.stations_data_sets()
 instance_latlon_AOD_PM25.PM_25_data()
 instance_latlon_AOD_PM25.training_data()
 instance_latlon_AOD_PM25.Torch_data()
-final_data_latlon_AOD_PM25 = instance_latlon_AOD_PM25.full_pipeline()
-final_data_latlon_AOD_PM25[0].shape
-final_data_latlon_AOD_PM25[1].shape
+final_data_latlong_AOD_PM25 = instance_latlon_AOD_PM25.full_pipeline()
+len(final_data_latlong_AOD_PM25[0])
 
+final_data_latlong_AOD_PM25[1]
 # final data with latitude, longitude and AOD
 
 instance_latlon_AOD.modis_data_sets()
@@ -79,7 +79,7 @@ instance_latlon_AOD.PM_25_data()
 instance_latlon_AOD.training_data()
 instance_latlon_AOD.Torch_data()
 final_data_latlong_AOD = instance_latlon_AOD.full_pipeline()
-final_data_latlong_AOD[0].shape
+final_data_latlong_AOD[0]
 final_data_latlong_AOD[1][0]
 
 # final data with latitude, longitude  and PM2.5
@@ -90,7 +90,7 @@ instance_latlon_PM25.training_data()
 instance_latlon_PM25.Torch_data()
 final_data_latlong_PM25 = instance_latlon_PM25.full_pipeline()
 final_data_latlong_PM25[0].shape
-final_data_latlong_PM25[1][0]
+final_data_latlong_PM25[1]
 
 # final data with latitude and longitude
 intance_latlon.modis_data_sets()
@@ -107,18 +107,19 @@ final_data_latlong[1][0]
 """
 Final training data.................
 """
+final_data_latlong_AOD_PM25
 
-
-final_data_latlon_AOD_PM25[0].shape
+final_data_latlong_AOD_PM25
 final_data_latlong_AOD[0].shape
 final_data_latlong_PM25[0].shape
 final_data_latlong[0].shape
- 
-for i, t in enumerate(final_data_latlon_AOD_PM25):
+
+for i, t in enumerate(final_data_latlong_AOD_PM25):
     print(i, t.shape)
 # final data sets wit x, y in torch tensor form
-final_data_latlon_AOD_PM25
-final_data_latlong_AOD
+final_data_latlong_AOD_PM25[0].shape
+x, y = final_data_latlong_AOD
+x
 final_data_latlong_PM25
 final_data_latlong
 
@@ -134,7 +135,7 @@ final_data_latlong
 Importing the model................
 """
 
-from Models.neural_process import NeuralProcess
+from src.Models.neural_process import NeuralProcess
 
 # self, x_c_dim, y_c_dim, x_t_dim, y_t_dim, hidden_dim, latent_dim
 # self, x_target_dim, z_dim, hidden_dim, y_target_dim
@@ -145,7 +146,7 @@ from Models.neural_process import NeuralProcess
 # -------------************---------------------------------
 
 """
-Final models for training...........
+Final models for training........... making attributes from the class
 """
 
 model_latlon_AOD_PM25 = NeuralProcess(128, 2, 128, 2, 128, 128)
@@ -158,7 +159,7 @@ model_latlon = NeuralProcess(126, 2, 127, 2, 128, 128)
 Here we will import the loss function...........
 """
 # self, beta, learning_rate, stepsize, Number_of_steps, device#
-NLL = LossFunctions()
+Loss = LossFunctions()
 
 
 """
@@ -174,26 +175,83 @@ Fifth step --: will evaluate the model.
 
 """
 
+# ------------ The first step is to devide the data in terms of context and test sets.
 
-from optimizer_utils import NeuralProcessDataset
-from optimizer_utils import NeuralProcessTrainer
 
-# First data ser priority will be 
-raw_dataet = final_data_latlon_AOD_PM25
-trainer = NeuralProcessTrainer(
-    raw_dataset=final_data_latlon_AOD_PM25,   # [X, Y]
-    model_class=NeuralProcess,
-    loss_class=LossFunctions,
-    x_dim=128,
-    y_dim=2,
-    hidden_dim=128,
-    latent_dim=128,
-    train_ratio=0.7,              # 70% train
-    val_ratio=0.15,               # 15% val, 15% test
-    batch_size=32,
-    tasks_per_epoch=3000,
-    run_name="NP_latlon_AOD_PM25",
-    lr=1e-3,
-    beta=1.0,
+from optimizer_utils import context_target_split
+
+C_T_data = context_target_split(
+    final_data_latlong_AOD_PM25[0].unsqueeze(0),
+    final_data_latlong_AOD_PM25[1].unsqueeze(0),
 )
-model = trainer.train(epochs=100, log_pred_every=10)
+
+C_T_data[0].shape
+C_T_data[1].shape
+C_T_data[2].shape
+C_T_data[3].shape
+
+final_data_latlong_AOD_PM25[0].unsqueeze(0)[0]
+
+""" self,
+        model,
+        optimizer,
+        loss_fn,
+        device,
+        log_dir="./logs",
+        checkpoint_dir="./checkpoints",
+"""
+
+# Importing the optimizer
+import torch.optim as optim
+
+Optimizer = optim.Adam(model_latlon_AOD_PM25.parameters(), lr=1e-5)
+
+# Importing the trainer
+
+final_data_latlong_AOD_PM25[0].__getitem__(10)
+# First data ser priority will be
+# def train_epoch(self, dataloader, epoch_idx):
+
+from optimizer_utils import neural_process_data
+# now to start training we need a data-loader that
+
+NeuralProcessData_latlon_AOD_PM25 = neural_process_data(
+    final_data_latlong_AOD_PM25[0],
+    final_data_latlong_AOD_PM25[1],
+    num_points_per_task=200,
+)
+
+X_task, Y_task = NeuralProcessData_latlon_AOD_PM25[0]
+X_task.shape
+Y_task.shape
+
+# ------------------- Here we will start training -----------------------------------------
+
+dataloader = DataLoader(
+    dataset=NeuralProcessData_latlon_AOD_PM25,
+    batch_size=16,
+    shuffle=True,
+    num_workers=0,
+)
+dataloader.dataset
+
+
+Xb, Yb = next(iter(dataloader))
+Xb.shape, Yb.shape
+from optimizer_utils import NPTrainer
+
+
+Training = NPTrainer(
+    model=model_latlon_AOD_PM25,
+    optimizer=Optimizer,
+    loss_fn=Loss,
+    device="cpu",
+    log_dir="./logs",
+    checkpoint_dir="./checkpoints",
+)
+
+
+for epoch in range(10):
+    Training.train_epoch(dataloader, epoch)
+for epoch in range(10):
+    Training.save_checkpoint(epoch)

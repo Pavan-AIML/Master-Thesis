@@ -25,12 +25,14 @@ class Decoder(nn.Module):
         )
 
     def forward(self, x_target, z):
-        z = z.expand(
-            -1, x_target.size(1), z.size(-1)
-        )  # Expanding z to match x_target's shape
+        z = z.unsqueeze(1)
+        z = z.expand(-1, x_target.size(1), -1)
+        # Expanding z to match x_target's shape
         combined_input = torch.cat([x_target, z], dim=-1)
         output = self.net(combined_input)
         mu, log_var = output.chunk(2, dim=-1)  # Splitting into mean and log variance
+        # clamp the log variance with the values between (-10 ,10)
+        log_var = torch.clamp(log_var, -10, 10)
         var = torch.exp(log_var)  # Ensuring variance is positive
         # vector of length of y_target and y_input dims
         return mu, var

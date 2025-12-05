@@ -300,13 +300,15 @@ class Final_Air_Quality_Dataset_pipeline_latlon_PM25:
         )
         for inputs, outputs in torch_latlong_loader:
             all_latlong = inputs[:, 0:2]
-        all_latitude_longitude_embeddings = self.geospatial_encoder_instance(
-            all_latlong
-        )
+        with torch.no_grad():
+            all_latitude_longitude_embeddings = self.geospatial_encoder_instance(
+                all_latlong
+            )
         final_inputs = torch.cat(
             (all_latitude_longitude_embeddings, inputs[:, 2:]), dim=1
         )
-
+        final_inputs = final_inputs.clone().detach()
+        outputs = outputs.clone().detach()
         return final_inputs, outputs
 
 
