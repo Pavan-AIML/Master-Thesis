@@ -240,6 +240,7 @@ Xb, Yb = next(iter(dataloader))
 Xb.shape, Yb.shape
 from optimizer_utils import NPTrainer
 
+# Training the model
 
 Training = NPTrainer(
     model=model_latlon_AOD_PM25,
@@ -250,8 +251,11 @@ Training = NPTrainer(
     checkpoint_dir="./checkpoints",
 )
 
-
+# running the epochs.
 for epoch in range(10):
     Training.train_epoch(dataloader, epoch)
+# saving the models weights.
 for epoch in range(10):
     Training.save_checkpoint(epoch)
+
+# Now we are extracting the weights and will be using it for the testing purpose.
