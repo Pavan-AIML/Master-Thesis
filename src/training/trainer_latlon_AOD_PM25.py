@@ -48,10 +48,36 @@ from notebooks.Modis_data_analysis.final_loader import (
     Final_Air_Quality_Dataset_pipeline_latlon,
 )
 
+"""
+Validation data set 
+"""
+
+
+from notebooks.Modis_data_analysis.final_loader import (
+    Final_Air_Quality_Dataset_pipeline_latlon_AOD_PM25_val,
+    Final_Air_Quality_Dataset_pipeline_latlon_AOD_val,
+    Final_Air_Quality_Dataset_pipeline_latlon_PM25_val,
+    Final_Air_Quality_Dataset_pipeline_latlon_val,
+)
+
+
+"""
+Test data set 
+"""
+from notebooks.Modis_data_analysis.final_loader import (
+    Final_Air_Quality_Dataset_pipeline_latlon_AOD_PM25_test,
+    Final_Air_Quality_Dataset_pipeline_latlon_AOD_test,
+    Final_Air_Quality_Dataset_pipeline_latlon_PM25_test,
+    Final_Air_Quality_Dataset_pipeline_latlon_test,
+)
+
 # importing the loss function
 from loss_functions import LossFunctions
 
 
+"""
+Instances for the training data set 
+"""
 # -------------************--------------------------------
 # Creating all the instance here
 
@@ -70,7 +96,7 @@ instance_latlon_AOD_PM25.Torch_data()
 final_data_latlong_AOD_PM25 = instance_latlon_AOD_PM25.full_pipeline()
 len(final_data_latlong_AOD_PM25[0])
 
-final_data_latlong_AOD_PM25[1]
+final_data_latlong_AOD_PM25[1].shape
 # final data with latitude, longitude and AOD
 
 instance_latlon_AOD.modis_data_sets()
@@ -119,11 +145,69 @@ for i, t in enumerate(final_data_latlong_AOD_PM25):
 # final data sets wit x, y in torch tensor form
 final_data_latlong_AOD_PM25[0].shape
 x, y = final_data_latlong_AOD
-x
+x.shape
 final_data_latlong_PM25
 final_data_latlong
 
 
+"""
+Instances for the test data 
+
+"""
+instance_latlon_AOD_PM25_val = Final_Air_Quality_Dataset_pipeline_latlon_AOD_PM25_val(
+    config
+)
+instance_latlon_AOD_val = Final_Air_Quality_Dataset_pipeline_latlon_AOD_val(config)
+instance_latlon_PM25_val = Final_Air_Quality_Dataset_pipeline_latlon_PM25_val(config)
+instance_latlon_val = Final_Air_Quality_Dataset_pipeline_latlon_val(config)
+
+"""
+Final test data sets 
+"""
+# latlon_AOD_pm25
+
+instance_latlon_AOD_PM25_val.modis_data_sets()
+instance_latlon_AOD_PM25_val.stations_data_sets()
+instance_latlon_AOD_PM25_val.PM_25_data()
+instance_latlon_AOD_PM25_val.training_data()
+instance_latlon_AOD_PM25_val.Torch_data()
+final_data_latlong_AOD_PM25_val = instance_latlon_AOD_PM25_val.full_pipeline()
+final_data_latlong_AOD_PM25_val
+
+# latlon_AOD
+instance_latlon_AOD_val.modis_data_sets()
+instance_latlon_AOD_val.stations_data_sets()
+instance_latlon_AOD_val.PM_25_data()
+instance_latlon_AOD_val.training_data()
+instance_latlon_AOD_val.Torch_data()
+final_data_latlong_AOD_val = instance_latlon_AOD_PM25_val.full_pipeline()
+final_data_latlong_AOD_val[0].shape
+
+
+# latlon_PM2.5
+instance_latlon_PM25_val.modis_data_sets()
+instance_latlon_PM25_val.stations_data_sets()
+instance_latlon_PM25_val.PM_25_data()
+instance_latlon_PM25_val.training_data()
+instance_latlon_PM25_val.Torch_data()
+final_data_latlong_PM25_val = instance_latlon_AOD_PM25_val.full_pipeline()
+final_data_latlong_PM25_val[0].shape
+
+
+# latlon
+instance_latlon_val.modis_data_sets()
+instance_latlon_val.stations_data_sets()
+instance_latlon_val.PM_25_data()
+instance_latlon_val.training_data()
+instance_latlon_val.Torch_data()
+final_data_latlong_val = instance_latlon_AOD_PM25_val.full_pipeline()
+final_data_latlong_val[0].shape
+
+# ************************ Final validation data ***************************************
+final_data_latlong_AOD_PM25_val
+final_data_latlong_AOD_val
+final_data_latlong_PM25_val
+final_data_latlong_val
 # -------------************--------------------------------
 
 # training the model in different sdata sets and storing the weights.
@@ -212,8 +296,15 @@ final_data_latlong_AOD_PM25[0].__getitem__(10)
 # First data ser priority will be
 # def train_epoch(self, dataloader, epoch_idx):
 
+
+"""
+neural_process_data converts the data from the final paipe line to dataloader format so that we can convert the data and access in the __getitem__ form.
+"""
+
 from optimizer_utils import neural_process_data
 # now to start training we need a data-loader that
+
+# for train data
 
 NeuralProcessData_latlon_AOD_PM25 = neural_process_data(
     final_data_latlong_AOD_PM25[0],
@@ -221,12 +312,27 @@ NeuralProcessData_latlon_AOD_PM25 = neural_process_data(
     num_points_per_task=200,
 )
 
+# for test data
+
+NeuralProcessData_latlon_AOD_PM25_val = neural_process_data(
+    final_data_latlong_AOD_PM25_val[0],
+    final_data_latlong_AOD_PM25_val[1],
+    num_points_per_task=200,
+)
+
+
+# ------------------------------- practice --------------------
+
 X_task, Y_task = NeuralProcessData_latlon_AOD_PM25[0]
 X_task.shape
 Y_task.shape
 
-# ------------------- Here we will start training -----------------------------------------
+# ------------------------------- practice ----------------------------------
 
+
+# ------------------- Here we will start training ---------------------------
+
+# creating data loader for training data
 dataloader = DataLoader(
     dataset=NeuralProcessData_latlon_AOD_PM25,
     batch_size=16,
@@ -236,8 +342,22 @@ dataloader = DataLoader(
 dataloader.dataset
 
 
+# In this way we can extract the x, y batches from dataloader.
+
+"""
+How to check the training dataloader 
+"""
+
+len(dataloader)
 Xb, Yb = next(iter(dataloader))
 Xb.shape, Yb.shape
+
+
+"""
+Start training 
+"""
+
+# importing the trainer
 from optimizer_utils import NPTrainer
 
 # Training the model
@@ -254,8 +374,14 @@ Training = NPTrainer(
 # running the epochs.
 for epoch in range(10):
     Training.train_epoch(dataloader, epoch)
+
 # saving the models weights.
 for epoch in range(10):
     Training.save_checkpoint(epoch)
 
-# Now we are extracting the weights and will be using it for the testing purpose.
+"""
+Now we need to export the validation data-set so that our trained models can be validated. 
+"""
+
+
+# Now we are extracting the weights and will be using it for the testing purpose we will make our model ready for test.

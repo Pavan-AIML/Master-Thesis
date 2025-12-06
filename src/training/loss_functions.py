@@ -47,6 +47,7 @@ class LossFunctions(nn.Module):
 
     #
     def KL_divergence(self, mu_zc, log_var_zc, mu_zct, log_var_zct):
+        # to avoide the variance going below the expectation we will clamp it to avoide the failure of the training.
         log_var_zc = torch.clamp(log_var_zc, -10, 10)
         log_var_zct = torch.clamp(log_var_zct, -10, 10)
         var_zct = log_var_zct.exp()

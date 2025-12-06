@@ -177,3 +177,76 @@ class NPTrainer:
         path = os.path.join(self.checkpoint_dir, f"model_epoch_{epoch}.pth")
         torch.save(self.model.state_dict(), path)
         print(f"Checkpoint saved: {path}")
+
+
+# here ww will build the class for the best model selectioin in validation dataset.
+import glob
+
+
+class Trained_model_selection_in_val_data_set:
+    def __init__(self, model, val_dataloader, device, Loss, context_target_split):
+        # here model will be a class of model wiith the input arguments.
+        self.model = model
+        # this dataloader will be the data set of the validation set.
+        self.dataloader = val_dataloader
+        self.device = device
+        self.context_target_split = context_target_split
+        self.Loss = Loss  # Loss class
+
+        """
+        model : Neural process model 
+        val_data_loader : data loader of validation data set
+        device : "cpu"
+        Loss: Loss calss that has been made LossFunctions without the forward arguments 
+        context_target_split : funtion which splits our data in to context and targets.
+        
+        """
+
+    def get_the_best_model(self, checkpoint_folder_path):
+        # first we will get the x and y in batches so that we can split them in to context and test points and then we can use them for calculating the loss and then calculating the best model.
+        # folder of weights file.
+        All_check_point_loss = []
+
+        weight_files = glob.glob(os.path.join(checkpoint_folder_path, "*.pth"))
+
+        for file_path in weight_files:
+            try:
+                self.model.load_state_dict(
+                    torch.load(file_path, map_location=self.device)
+                )
+            except Exception as e:
+                print(f"error in loading the file {file_path}:{e}")
+                continue
+            self.model = self.model.eval()
+            running_loss = 0
+
+            with torch.no_grad():
+                for x_batch, y_batch in self.dataloader:
+                    x_batch = x_batch.to(self.device)
+                    y_batch = y_batch.to(self.device)
+
+                    xc, yc, xt, yt = self.context_target_split(x_batch, y_batch)
+
+                    # here we will load the model weights
+
+                    # forward pass
+                    outs = self.model(xc, yc, xt, yt)
+                    mu_y, var_y, mu_zc, log_var_zc, mu_zct, log_var_zct = outs
+
+                    # loss in the test set
+                    # loss forward function.
+
+                    total_loss, nll, kl = self.Loss(
+                        mu_y, var_y, yt, mu_zc, mu_zct, log_var_zc, log_var_zct
+                    )
+                    # here to accumulate the scaler loss and that is the reason we use loss.item()
+                    running_loss += total_loss.item()
+            # total average loss for each weight checkpoint
+
+            total_avg_loss = running_loss / len(self.dataloader)
+            print(f"Total_loss for the {file_path} is : {total_avg_loss}")
+            All_check_point_loss.append((total_avg_loss, file_path))
+            All_check_point_loss.sort(key=lambda x: x[0])
+
+            best_loss, best_model = All_check_point_loss[0]
+        return best_model
