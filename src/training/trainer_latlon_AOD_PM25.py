@@ -180,7 +180,7 @@ instance_latlon_AOD_val.stations_data_sets()
 instance_latlon_AOD_val.PM_25_data()
 instance_latlon_AOD_val.training_data()
 instance_latlon_AOD_val.Torch_data()
-final_data_latlong_AOD_val = instance_latlon_AOD_PM25_val.full_pipeline()
+final_data_latlong_AOD_val = instance_latlon_AOD_val.full_pipeline()
 final_data_latlong_AOD_val[0].shape
 
 
@@ -190,7 +190,7 @@ instance_latlon_PM25_val.stations_data_sets()
 instance_latlon_PM25_val.PM_25_data()
 instance_latlon_PM25_val.training_data()
 instance_latlon_PM25_val.Torch_data()
-final_data_latlong_PM25_val = instance_latlon_AOD_PM25_val.full_pipeline()
+final_data_latlong_PM25_val = instance_latlon_PM25_val.full_pipeline()
 final_data_latlong_PM25_val[0].shape
 
 
@@ -200,14 +200,14 @@ instance_latlon_val.stations_data_sets()
 instance_latlon_val.PM_25_data()
 instance_latlon_val.training_data()
 instance_latlon_val.Torch_data()
-final_data_latlong_val = instance_latlon_AOD_PM25_val.full_pipeline()
+final_data_latlong_val = instance_latlon_val.full_pipeline()
 final_data_latlong_val[0].shape
 
 # ************************ Final validation data ***************************************
-final_data_latlong_AOD_PM25_val
-final_data_latlong_AOD_val
-final_data_latlong_PM25_val
-final_data_latlong_val
+final_data_latlong_AOD_PM25_val[0].shape
+final_data_latlong_AOD_val[0].shape
+final_data_latlong_PM25_val[0].shape
+final_data_latlong_val[0].shape
 # -------------************--------------------------------
 
 # training the model in different sdata sets and storing the weights.
@@ -236,7 +236,7 @@ Final models for training........... making attributes from the class
 model_latlon_AOD_PM25 = NeuralProcess(128, 2, 128, 2, 128, 128)
 model_latlon_AOD = NeuralProcess(127, 2, 127, 2, 128, 128)
 model_latlon_PM25 = NeuralProcess(127, 2, 127, 2, 128, 128)
-model_latlon = NeuralProcess(126, 2, 127, 2, 128, 128)
+model_latlon = NeuralProcess(126, 2, 126, 2, 128, 128)
 
 
 """
@@ -288,7 +288,12 @@ final_data_latlong_AOD_PM25[0].unsqueeze(0)[0]
 # Importing the optimizer
 import torch.optim as optim
 
+# here we are using ADAM optimizer.
+
 Optimizer = optim.Adam(model_latlon_AOD_PM25.parameters(), lr=1e-5)
+Optimizer_latlong_AOD = optim.Adam(model_latlon_AOD.parameters(), lr=1e-5)
+Optimizer_latlong_PM25 = optim.Adam(model_latlon_PM25.parameters(), lr=1e-5)
+Optimizer_latlong = optim.Adam(model_latlon.parameters(), lr=1e-5)
 
 # Importing the trainer
 
@@ -321,9 +326,52 @@ NeuralProcessData_latlon_AOD_PM25_val = neural_process_data(
 )
 
 
+NeuralProcessData_latlon_AOD = neural_process_data(
+    final_data_latlong_AOD[0],
+    final_data_latlong_AOD[1],
+    num_points_per_task=200,
+)
+
+# for test data
+
+NeuralProcessData_latlon_AOD_val = neural_process_data(
+    final_data_latlong_AOD_val[0],
+    final_data_latlong_AOD_val[1],
+    num_points_per_task=200,
+)
+
+NeuralProcessData_latlon_PM25 = neural_process_data(
+    final_data_latlong_PM25[0],
+    final_data_latlong_PM25[1],
+    num_points_per_task=200,
+)
+
+# for test data
+
+NeuralProcessData_latlon_PM25_val = neural_process_data(
+    final_data_latlong_PM25_val[0],
+    final_data_latlong_PM25_val[1],
+    num_points_per_task=200,
+)
+
+NeuralProcessData_latlon = neural_process_data(
+    final_data_latlong[0],
+    final_data_latlong[1],
+    num_points_per_task=200,
+)
+
+# for test data
+
+NeuralProcessData_latlon_val = neural_process_data(
+    final_data_latlong_val[0],
+    final_data_latlong_val[1],
+    num_points_per_task=200,
+)
+
+
 # ------------------------------- practice --------------------
 
-X_task, Y_task = NeuralProcessData_latlon_AOD_PM25[0]
+X_task, Y_task = NeuralProcessData_latlon_AOD[0]
 X_task.shape
 Y_task.shape
 
@@ -335,6 +383,7 @@ Creating the final data loaders for train val and test sets.
 # ------------------- Here we will start training ---------------------------
 
 # creating data loader for training data
+
 dataloader = DataLoader(
     dataset=NeuralProcessData_latlon_AOD_PM25,
     batch_size=16,
@@ -343,10 +392,44 @@ dataloader = DataLoader(
 )
 dataloader.dataset
 
+dataloader_latlon_AOD = DataLoader(
+    dataset=NeuralProcessData_latlon_AOD,
+    batch_size=16,
+    shuffle=True,
+    num_workers=0,
+)
+
+dataloader_latlon_PM25 = DataLoader(
+    dataset=NeuralProcessData_latlon_PM25,
+    batch_size=16,
+    shuffle=True,
+    num_workers=0,
+)
+
+dataloader_latlon = DataLoader(
+    dataset=NeuralProcessData_latlon,
+    batch_size=16,
+    shuffle=True,
+    num_workers=0,
+)
+
+for x, y in dataloader_latlon_PM25:
+    x.shape, y.shape
+
+for x, y in dataloader_latlon_AOD:
+    x.shape, y.shape
+
+for x, y in dataloader_latlon:
+    x.shape, y.shape
+
+
 # checking the size and shape of data loader
 for x, y in dataloader:
     print(x.shape, y.shape)
 len(dataloader)
+
+
+# ---------------------  Creating the validation data loaders --------------------------------
 
 
 # creating data loader fo rvalidation data
@@ -357,11 +440,45 @@ dataloader_val = DataLoader(
     num_workers=0,
 )
 
+
+dataloader_val_latlon_AOD = DataLoader(
+    dataset=NeuralProcessData_latlon_AOD_val,
+    batch_size=16,
+    shuffle=True,
+    num_workers=0,
+)
+
+
+dataloader_val_latlon_PM25 = DataLoader(
+    dataset=NeuralProcessData_latlon_PM25_val,
+    batch_size=16,
+    shuffle=True,
+    num_workers=0,
+)
+
+dataloader_val_latlon = DataLoader(
+    dataset=NeuralProcessData_latlon_val,
+    batch_size=16,
+    shuffle=True,
+    num_workers=0,
+)
+
+
 # checking the size and shape of data loader
 for x, y in dataloader_val:
     print(x.shape, y.shape)
 len(dataloader_val)
 
+
+for x, y in dataloader_val_latlon_AOD:
+    x.shape, y.shape
+
+
+for x, y in dataloader_val_latlon_PM25:
+    x.shape, y.shape
+
+for x, y in dataloader_val_latlon:
+    x.shape, y.shape
 # In this way we can extract the x, y batches from dataloader.
 
 """
@@ -374,7 +491,7 @@ Xb.shape, Yb.shape
 
 
 """
-Start training 
+Start training for all the models in their respective data sets 
 """
 
 # importing the trainer
@@ -383,58 +500,167 @@ from optimizer_utils import validation_function
 
 # cretaing and saving the logs as per the current training.
 current_time = datetime.now().strftime("%Y%m%d-%H%M%S")
-unique_log_dir = f"./logs/latlon_AOD_PM25/{current_time}"
+# unique_log_dir = f"./logs/latlon_AOD_PM25/{current_time}"
 
+## 1 -----------------------  Lat_Lon_AOD_PM2.5 data -----------------------------
+##################################################################################
 # Training the model
+#
+# Training = NPTrainer(
+#     model=model_latlon_AOD_PM25,
+#     optimizer=Optimizer,
+#     loss_fn=Loss,
+#     device="cpu",
+#     log_dir=unique_log_dir,
+#     checkpoint_dir="./checkpoints/latlon_AOD_PM25",
+# )
+#
+# running the epochs.
+# ... definitions above ...
+#
+# Define a "best loss" to track improvement
+# best_val_loss = float('inf')
+#
+# for epoch in range(100): # Run for 100 epochs
+#
+#     # 1. TRAIN
+#     train_loss = Training.train_epoch(dataloader, epoch)
+#
+#     # 2. VALIDATE (Call the function we just wrote)
+#     val_loss = validation_function(
+#         model=model_latlon_AOD_PM25, # Access model from your Trainer class
+#         val_dataloader=dataloader_val, # You need a separate loader for val data
+#         loss_fn=Loss,
+#         device="cpu"
+#     )
+#
+#     print(f"Epoch {epoch} | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}")
+#
+#     # 3. SAVE ONLY IF BETTER
+#     if val_loss < best_val_loss:
+#         best_val_loss = val_loss
+#         Training.save_checkpoint(epoch)
+#         print(f"   >>> SAVED: New best model found!")
+#
+##################################################################################
+# """
+# Now we need to export the validation data-set so that our trained models can be validated and model with best weights can be selected.
+# """
 
+
+# self, model, val_dataloader, device, Loss, context_target_split
+# Now we are extracting the weights and will be using it for the testing purpose we will make our model ready for test.
+
+
+##################################################################
+# ----------- Training of Lat_Lon_AOD data ------------
+##################################################################
+
+# unique_log_dir = f"./logs/latlon_AOD/{current_time}"
+# unique_checkpoint_dir = f"./checkpoints/latlon_AOD/{current_time}"
+# Training = NPTrainer(
+#     model=model_latlon_AOD,
+#     optimizer=Optimizer_latlong_AOD,
+#     loss_fn=Loss,
+#     device="cpu",
+#     log_dir=unique_log_dir,
+#     checkpoint_dir=unique_checkpoint_dir,
+# )
+# #  running the epochs.
+# #  ... definitions above ...
+
+# #  Define a "best loss" to track improvement
+# best_val_loss = float("inf")
+# #
+# for epoch in range(100):  # Run for 100 epochs
+#     # 1. TRAIN
+#     train_loss = Training.train_epoch(dataloader_latlon_AOD, epoch)
+#     # 2. VALIDATE (Call the function we just wrote)
+#     val_loss = validation_function(
+#         model=model_latlon_AOD,  # Access model from your Trainer class
+#         val_dataloader=dataloader_val_latlon_AOD,  # You need a separate loader for val data
+#         loss_fn=Loss,
+#         device="cpu",
+#     )
+#     print(f"Epoch {epoch} | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}")
+#     # 3. SAVE ONLY IF BETTER
+#     if val_loss < best_val_loss:
+#         best_val_loss = val_loss
+#         Training.save_checkpoint(epoch)
+#         print(f"   >>> SAVED: New best model found!")
+
+
+# ##################################################################
+# # -------------Training of Lat_Lon_PM25 data
+# ##################################################################
+# current_time = datetime.now().strftime("%Y%m%d-%H%M%S")
+# unique_log_dir = f"./logs/latlon_PM25/{current_time}"
+# unique_checkpoint_dir = f"./checkpoints/latlon_PM25/{current_time}"
+# Training = NPTrainer(
+#     model=model_latlon_PM25,
+#     optimizer=Optimizer_latlong_PM25,
+#     loss_fn=Loss,
+#     device="cpu",
+#     log_dir=unique_log_dir,
+#     checkpoint_dir=unique_checkpoint_dir,
+# )
+# #  running the epochs.
+# #  ... definitions above ...
+
+# #  Define a "best loss" to track improvement
+# best_val_loss = float("inf")
+# #
+# for epoch in range(100):  # Run for 100 epochs
+#     # 1. TRAIN
+#     train_loss = Training.train_epoch(dataloader_latlon_PM25, epoch)
+#     # 2. VALIDATE (Call the function we just wrote)
+#     val_loss = validation_function(
+#         model=model_latlon_PM25,  # Access model from your Trainer class
+#         val_dataloader=dataloader_val_latlon_PM25,  # You need a separate loader for val data
+#         loss_fn=Loss,
+#         device="cpu",
+#     )
+#     print(f"Epoch {epoch} | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}")
+#     # 3. SAVE ONLY IF BETTER
+#     if val_loss < best_val_loss:
+#         best_val_loss = val_loss
+#         Training.save_checkpoint(epoch)
+#         print(f"   >>> SAVED: New best model found!")
+
+
+################################################################
+# Training on lat_lon data set
+##################################################################
+current_time = datetime.now().strftime("%Y%m%d-%H%M%S")
+unique_log_dir = f"./logs/latlon/{current_time}"
+unique_checkpoint_dir = f"./checkpoints/latlon/{current_time}"
 Training = NPTrainer(
-    model=model_latlon_AOD_PM25,
-    optimizer=Optimizer,
+    model=model_latlon,
+    optimizer=Optimizer_latlong,
     loss_fn=Loss,
     device="cpu",
     log_dir=unique_log_dir,
-    checkpoint_dir="./checkpoints/latlon_AOD_PM25",
+    checkpoint_dir=unique_checkpoint_dir,
 )
+#  running the epochs.
+#  ... definitions above ...
 
-# running the epochs.
-# ... definitions above ...
-
-# Define a "best loss" to track improvement
-best_val_loss = float('inf')
-
-for epoch in range(100): # Run for 100 epochs
-    
+#  Define a "best loss" to track improvement
+best_val_loss = float("inf")
+#
+for epoch in range(100):  # Run for 100 epochs
     # 1. TRAIN
-    train_loss = Training.train_epoch(dataloader, epoch)
-    
+    train_loss = Training.train_epoch(dataloader_latlon, epoch)
     # 2. VALIDATE (Call the function we just wrote)
     val_loss = validation_function(
-        model=model_latlon_AOD_PM25, # Access model from your Trainer class
-        val_dataloader=dataloader_val, # You need a separate loader for val data
+        model=model_latlon,  # Access model from your Trainer class
+        val_dataloader=dataloader_val_latlon,  # You need a separate loader for val data
         loss_fn=Loss,
-        device="cpu"
+        device="cpu",
     )
-
     print(f"Epoch {epoch} | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}")
-
     # 3. SAVE ONLY IF BETTER
     if val_loss < best_val_loss:
         best_val_loss = val_loss
         Training.save_checkpoint(epoch)
         print(f"   >>> SAVED: New best model found!")
-
-
-"""
-Now we need to export the validation data-set so that our trained models can be validated and model with best weights can be selected.
-"""
-
-from optimizer_utils import Trained_model_selection_in_val_data_set
-
-Model_selection_latlon_AOD_PM25 = Trained_model_selection_in_val_data_set(
-    model_latlon_AOD_PM25, dataloader_val, "cpu", Loss
-)
-
-
-
-# self, model, val_dataloader, device, Loss, context_target_split
-# Now we are extracting the weights and will be using it for the testing purpose we will make our model ready for test.
