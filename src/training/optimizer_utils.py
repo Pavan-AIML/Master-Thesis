@@ -101,7 +101,7 @@ class NPTrainer:
         loss_fn,
         device,
         log_dir="./logs",
-        checkpoint_dir="./checkpoints",
+        checkpoint_dir="./checkpoints/",
     ):
         self.model = model.to(device)
         self.optimizer = optimizer
@@ -126,7 +126,8 @@ class NPTrainer:
             y_batch = y_batch.clone().detach()
 
             # --- SPLIT DATA ---
-            # using num_target=200 to keep Mac memory safe
+            # we can use the functions defined outside of the class also
+
             xc, yc, xt, yt = context_target_split(
                 x_batch, y_batch, min_context=20, max_context=50, num_target=200
             )
@@ -184,13 +185,13 @@ import glob
 
 
 class Trained_model_selection_in_val_data_set:
-    def __init__(self, model, val_dataloader, device, Loss, context_target_split):
+    def __init__(self, model, val_dataloader, device, Loss):
         # here model will be a class of model wiith the input arguments.
         self.model = model
         # this dataloader will be the data set of the validation set.
         self.dataloader = val_dataloader
         self.device = device
-        self.context_target_split = context_target_split
+        # self.context_target_split = context_target_split
         self.Loss = Loss  # Loss class
 
         """
@@ -225,7 +226,7 @@ class Trained_model_selection_in_val_data_set:
                     x_batch = x_batch.to(self.device)
                     y_batch = y_batch.to(self.device)
 
-                    xc, yc, xt, yt = self.context_target_split(x_batch, y_batch)
+                    xc, yc, xt, yt = context_target_split(x_batch, y_batch)
 
                     # here we will load the model weights
 
@@ -250,3 +251,28 @@ class Trained_model_selection_in_val_data_set:
 
             best_loss, best_model = All_check_point_loss[0]
         return best_model
+
+
+def validation_function(model, val_dataloader, loss_fn, device):
+    model.eval()
+    running_loss = 0.0
+
+    with torch.no_grad():
+        for x_batch, y_batch in val_dataloader:
+            x_batch = x_batch.to(device)
+            y_batch = y_batch.to(device)
+
+            xc, yc, xt, yt = context_target_split(
+                x_batch, y_batch, min_context=5, max_context=100, num_target=1000
+            )
+
+            outs = model(xc, yc, xt, yt)
+            mu_y, var_y, mu_zc, log_var_zc, mu_zct, log_var_zct = outs
+
+            loss, nll, kl = loss_fn(mu_y, var_y, mu_zc, log_var_zc, mu_zct, log_var_zct)
+            running_loss += loss.item()
+
+        average_val_loss = running_loss / len(val_dataloader)
+
+        model.train()
+        return average_val_loss

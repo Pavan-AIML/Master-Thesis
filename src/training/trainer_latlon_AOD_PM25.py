@@ -328,7 +328,9 @@ X_task.shape
 Y_task.shape
 
 # ------------------------------- practice ----------------------------------
-
+"""
+Creating the final data loaders for train val and test sets.
+"""
 
 # ------------------- Here we will start training ---------------------------
 
@@ -341,6 +343,24 @@ dataloader = DataLoader(
 )
 dataloader.dataset
 
+# checking the size and shape of data loader
+for x, y in dataloader:
+    print(x.shape, y.shape)
+len(dataloader)
+
+
+# creating data loader fo rvalidation data
+dataloader_val = DataLoader(
+    dataset=NeuralProcessData_latlon_AOD_PM25_val,
+    batch_size=16,
+    shuffle=True,
+    num_workers=0,
+)
+
+# checking the size and shape of data loader
+for x, y in dataloader_val:
+    print(x.shape, y.shape)
+len(dataloader_val)
 
 # In this way we can extract the x, y batches from dataloader.
 
@@ -359,6 +379,11 @@ Start training
 
 # importing the trainer
 from optimizer_utils import NPTrainer
+from optimizer_utils import validation_function
+
+# cretaing and saving the logs as per the current training.
+current_time = datetime.now().strftime("%Y%m%d-%H%M%S")
+unique_log_dir = f"./logs/latlon_AOD_PM25/{current_time}"
 
 # Training the model
 
@@ -367,21 +392,26 @@ Training = NPTrainer(
     optimizer=Optimizer,
     loss_fn=Loss,
     device="cpu",
-    log_dir="./logs",
-    checkpoint_dir="./checkpoints",
+    log_dir=unique_log_dir,
+    checkpoint_dir="./checkpoints/latlon_AOD_PM25",
 )
 
 # running the epochs.
-for epoch in range(10):
+for epoch in range(100):
     Training.train_epoch(dataloader, epoch)
-
-# saving the models weights.
-for epoch in range(10):
+    # saving the models weights.
     Training.save_checkpoint(epoch)
 
+
 """
-Now we need to export the validation data-set so that our trained models can be validated. 
+Now we need to export the validation data-set so that our trained models can be validated and model with best weights can be selected.
 """
 
+from optimizer_utils import Trained_model_selection_in_val_data_set
 
+Model_selection_latlon_AOD_PM25 = Trained_model_selection_in_val_data_set(
+    model_latlon_AOD_PM25, dataloader_val, "cpu", Loss
+)
+
+# self, model, val_dataloader, device, Loss, context_target_split
 # Now we are extracting the weights and will be using it for the testing purpose we will make our model ready for test.
