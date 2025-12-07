@@ -253,6 +253,10 @@ class Trained_model_selection_in_val_data_set:
         return best_model
 
 
+
+
+
+
 def validation_function(model, val_dataloader, loss_fn, device):
     model.eval()
     running_loss = 0.0
@@ -269,7 +273,8 @@ def validation_function(model, val_dataloader, loss_fn, device):
             outs = model(xc, yc, xt, yt)
             mu_y, var_y, mu_zc, log_var_zc, mu_zct, log_var_zct = outs
 
-            loss, nll, kl = loss_fn(mu_y, var_y, mu_zc, log_var_zc, mu_zct, log_var_zct)
+            loss, nll, kl = loss_fn(mu_y, var_y, yt, mu_zc, mu_zct, log_var_zc, log_var_zct
+                    )
             running_loss += loss.item()
 
         average_val_loss = running_loss / len(val_dataloader)

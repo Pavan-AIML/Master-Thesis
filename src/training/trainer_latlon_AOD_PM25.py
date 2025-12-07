@@ -397,10 +397,31 @@ Training = NPTrainer(
 )
 
 # running the epochs.
-for epoch in range(100):
-    Training.train_epoch(dataloader, epoch)
-    # saving the models weights.
-    Training.save_checkpoint(epoch)
+# ... definitions above ...
+
+# Define a "best loss" to track improvement
+best_val_loss = float('inf')
+
+for epoch in range(100): # Run for 100 epochs
+    
+    # 1. TRAIN
+    train_loss = Training.train_epoch(dataloader, epoch)
+    
+    # 2. VALIDATE (Call the function we just wrote)
+    val_loss = validation_function(
+        model=model_latlon_AOD_PM25, # Access model from your Trainer class
+        val_dataloader=dataloader_val, # You need a separate loader for val data
+        loss_fn=Loss,
+        device="cpu"
+    )
+
+    print(f"Epoch {epoch} | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}")
+
+    # 3. SAVE ONLY IF BETTER
+    if val_loss < best_val_loss:
+        best_val_loss = val_loss
+        Training.save_checkpoint(epoch)
+        print(f"   >>> SAVED: New best model found!")
 
 
 """
@@ -412,6 +433,8 @@ from optimizer_utils import Trained_model_selection_in_val_data_set
 Model_selection_latlon_AOD_PM25 = Trained_model_selection_in_val_data_set(
     model_latlon_AOD_PM25, dataloader_val, "cpu", Loss
 )
+
+
 
 # self, model, val_dataloader, device, Loss, context_target_split
 # Now we are extracting the weights and will be using it for the testing purpose we will make our model ready for test.

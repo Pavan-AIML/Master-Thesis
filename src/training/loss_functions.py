@@ -53,7 +53,7 @@ class LossFunctions(nn.Module):
         var_zct = log_var_zct.exp()
         var_zc = log_var_zc.exp()
 
-        KL = -0.5 * (
+        KL = 0.5 * (
             (log_var_zc - log_var_zct)
             + ((var_zct + (mu_zct - mu_zc) ** 2) / var_zc)
             - 1
