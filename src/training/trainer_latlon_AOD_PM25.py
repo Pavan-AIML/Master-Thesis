@@ -664,3 +664,10 @@ for epoch in range(100):  # Run for 100 epochs
         best_val_loss = val_loss
         Training.save_checkpoint(epoch)
         print(f"   >>> SAVED: New best model found!")
+
+
+
+# Loadign the model and then plottign the curvs..............
+
+ 
+

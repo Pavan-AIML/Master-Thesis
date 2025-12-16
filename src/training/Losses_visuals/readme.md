@@ -15,3 +15,4 @@
 <h3 align = "center"> Fourth loss with lat_lon data set visual with lr = 10(-5)<h3>
 
 ![Loss_4](images/Loss_latlon.png)
+

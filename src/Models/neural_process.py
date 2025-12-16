@@ -50,12 +50,14 @@ class NeuralProcess(nn.Module):
         # Step 1: Pass the context points through the encoder to get r
         rc = self.encoder(x_context, y_context)
         rt = self.encoder(x_target, y_target)
+        # here we are
         rct = torch.stack([rc, rt], dim=1)
         rct = rct.mean(dim=1)
         # Step 2: Pass r through the latent encoder to get the parameters of the latent variable
         # Here we are predicting log variance. so that it confirms that it is a positive number and will be easier at the time of sampling.
         mu_zc, log_var_zc = self.latent_encoder(rc)
-        # smapling form global latent variable
+        # Sampling form global latent variable
+        # And that is the reason we are having the input r from both context and targets.
         mu_zct, log_var_zct = self.latent_encoder(rct)
         # Step 3: Sample z from the latent distribution for contextual points
         stdct = torch.exp(0.5 * log_var_zct)
