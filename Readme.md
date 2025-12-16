@@ -5,7 +5,7 @@
 
 <h4 align="center"> Topic:  Neural Process Models for Spatio-Temporal Reconstruction of Aerosol Optical Depth and PM₂.₅ 🌎 </h4>
 
-<h3 align="center"> Followed steps</h3>
+<h3 align="center"> Followed steps in "main branch" </h3>
 
 
 ## Before Production (Research & Development Phase)
