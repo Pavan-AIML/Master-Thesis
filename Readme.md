@@ -16,7 +16,7 @@ Problem Definition & Data Understanding
 
 Define the goal: reconstruct spatial–temporal patterns of AOD and PM₂.₅.
 
-Explore satellite-based and ground-based air quality datasets (e.g., MODIS, AERONET).
+Explore satellite-based and ground-based air quality datasets.
 
 Identify missing data patterns and temporal gaps.
 
