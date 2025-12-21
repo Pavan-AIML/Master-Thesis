@@ -15,3 +15,11 @@ torchaudio==2.0.2
 basemap
 wandb
 xarray
+
+pandas
+matplotlib
+numpy
+scikit-learn
+seaborn
+jupyter
+

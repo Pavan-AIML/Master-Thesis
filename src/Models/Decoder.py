@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.functional as F
 
 """
-In this modeule theh input will be target values of x & z values and output values will be the reconstructed y values with uncertainty so here we will not get deterministic values of y but it's distirbution mu and variance.
+In this module the input will be target values of x & z values and output values will be the reconstructed y values with uncertainty so here we will not get deterministic values of y but it's distirbution mu and variance.
 """
 
 
@@ -35,6 +35,7 @@ class Decoder(nn.Module):
         log_var = torch.clamp(log_var, -10, 10)
         var = torch.exp(log_var)  # Ensuring variance is positive
         # vector of length of y_target and y_input dims
+        # Here mu is the mean of reconstructed y values and var is the variance of reconstructed y values. and both are the size of y output dimension as in our case bith will be dimension of 2.
         return mu, var
 
 

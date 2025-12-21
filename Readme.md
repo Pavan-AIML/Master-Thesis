@@ -50,7 +50,7 @@ Define the encoder–decoder structure and latent variable formulation.
 
 ## Model Training
 
-Train the model with various loss functions (e.g., MSE, KL divergence for variational components).
+Train the model with various loss functions (NLL, KL divergence for variational components).
 
 Use GPU-accelerated training with early stopping and checkpointing.
 

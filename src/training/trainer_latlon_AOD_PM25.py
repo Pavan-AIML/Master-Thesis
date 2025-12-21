@@ -288,12 +288,14 @@ final_data_latlong_AOD_PM25[0].unsqueeze(0)[0]
 # Importing the optimizer
 import torch.optim as optim
 
+
+
 # here we are using ADAM optimizer.
 
-Optimizer = optim.Adam(model_latlon_AOD_PM25.parameters(), lr=1e-5)
-Optimizer_latlong_AOD = optim.Adam(model_latlon_AOD.parameters(), lr=1e-5)
-Optimizer_latlong_PM25 = optim.Adam(model_latlon_PM25.parameters(), lr=1e-5)
-Optimizer_latlong = optim.Adam(model_latlon.parameters(), lr=1e-5)
+Optimizer = optim.Adam(model_latlon_AOD_PM25.parameters(), lr=config["train"]["lr"])
+Optimizer_latlong_AOD = optim.Adam(model_latlon_AOD.parameters(), lr=config["train"]["lr"])
+Optimizer_latlong_PM25 = optim.Adam(model_latlon_PM25.parameters(), lr=config["train"]["lr"])
+Optimizer_latlong = optim.Adam(model_latlon.parameters(), lr=config.train.lr)
 
 # Importing the trainer
 
@@ -500,48 +502,51 @@ from optimizer_utils import validation_function
 
 # cretaing and saving the logs as per the current training.
 current_time = datetime.now().strftime("%Y%m%d-%H%M%S")
-# unique_log_dir = f"./logs/latlon_AOD_PM25/{current_time}"
+unique_log_dir = f"./logs/latlon_AOD_PM25/{current_time}"
+unique_checkpoint_dir = f"/Users/pavankumar/Documents/Winter_Thesis/Coding_Learning/Master-Thesis/checkpoints/latlon_AOD/{current_time}"
 
 ## 1 -----------------------  Lat_Lon_AOD_PM2.5 data -----------------------------
 ##################################################################################
 # Training the model
 #
-# Training = NPTrainer(
-#     model=model_latlon_AOD_PM25,
-#     optimizer=Optimizer,
-#     loss_fn=Loss,
-#     device="cpu",
-#     log_dir=unique_log_dir,
-#     checkpoint_dir="./checkpoints/latlon_AOD_PM25",
-# )
-#
+Training = NPTrainer(
+    model=model_latlon_AOD_PM25,
+    optimizer=Optimizer,
+    loss_fn=Loss,
+    device="cpu",
+    log_dir=unique_log_dir,
+    checkpoint_dir=unique_checkpoint_dir,
+)
+
 # running the epochs.
 # ... definitions above ...
 #
 # Define a "best loss" to track improvement
-# best_val_loss = float('inf')
-#
-# for epoch in range(100): # Run for 100 epochs
-#
-#     # 1. TRAIN
-#     train_loss = Training.train_epoch(dataloader, epoch)
-#
-#     # 2. VALIDATE (Call the function we just wrote)
-#     val_loss = validation_function(
-#         model=model_latlon_AOD_PM25, # Access model from your Trainer class
-#         val_dataloader=dataloader_val, # You need a separate loader for val data
-#         loss_fn=Loss,
-#         device="cpu"
-#     )
-#
-#     print(f"Epoch {epoch} | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}")
-#
-#     # 3. SAVE ONLY IF BETTER
-#     if val_loss < best_val_loss:
-#         best_val_loss = val_loss
-#         Training.save_checkpoint(epoch)
-#         print(f"   >>> SAVED: New best model found!")
-#
+best_val_loss = float('inf')
+
+for epoch in range(10): # Run for 100 epochs
+
+    # 1. TRAIN
+    train_loss = Training.train_epoch(dataloader, epoch)
+
+    # 2. VALIDATE (Call the function we just wrote)
+    val_loss = validation_function(
+        model=Training.model, # Access model from your Trainer class
+        val_dataloader=dataloader_val, # You need a separate loader for val data
+        loss_fn=Loss,
+        device="cpu"
+    )
+
+    print(f"Epoch {epoch} | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}")
+
+    # 3. SAVE ONLY IF BETTER
+    if val_loss < best_val_loss:
+        best_val_loss = val_loss
+        Training.save_checkpoint(epoch)
+        print(f"   >>> SAVED: New best model found!")
+
+
+
 ##################################################################################
 # """
 # Now we need to export the validation data-set so that our trained models can be validated and model with best weights can be selected.
@@ -648,12 +653,12 @@ Training = NPTrainer(
 #  Define a "best loss" to track improvement
 best_val_loss = float("inf")
 #
-for epoch in range(100):  # Run for 100 epochs
+for epoch in range(10):  # Run for 100 epochs
     # 1. TRAIN
     train_loss = Training.train_epoch(dataloader_latlon, epoch)
     # 2. VALIDATE (Call the function we just wrote)
     val_loss = validation_function(
-        model=model_latlon,  # Access model from your Trainer class
+        model=Training.model,  # Access model from your Trainer class
         val_dataloader=dataloader_val_latlon,  # You need a separate loader for val data
         loss_fn=Loss,
         device="cpu",
@@ -666,8 +671,4 @@ for epoch in range(100):  # Run for 100 epochs
         print(f"   >>> SAVED: New best model found!")
 
 
-
 # Loadign the model and then plottign the curvs..............
-
- 
-

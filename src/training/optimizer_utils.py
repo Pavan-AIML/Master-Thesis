@@ -168,6 +168,8 @@ class NPTrainer:
             nll_avg /= n_batches
             kl_avg /= n_batches
 
+        # Here we are saving the logs by averaging the losses over all the batches for each epoch. AND saving them in the self.writer.add_scaler in the tensor board.
+
         self.writer.add_scalar("Loss/Total", total_loss_avg, epoch_idx)
         self.writer.add_scalar("Loss/NLL", nll_avg, epoch_idx)
         self.writer.add_scalar("Loss/KL", kl_avg, epoch_idx)
@@ -180,10 +182,39 @@ class NPTrainer:
         print(f"Checkpoint saved: {path}")
 
 
+# we will create the validation function for the validation data set.
+
+def validation_function(model, val_dataloader, loss_fn, device):
+    model.eval()
+    running_loss = 0.0
+
+    with torch.no_grad():
+        for x_batch, y_batch in val_dataloader:
+            x_batch = x_batch.to(device)
+            y_batch = y_batch.to(device)
+
+            xc, yc, xt, yt = context_target_split(
+                x_batch, y_batch, min_context=5, max_context=100, num_target=1000
+            )
+
+            outs = model(xc, yc, xt, yt)
+            mu_y, var_y, mu_zc, log_var_zc, mu_zct, log_var_zct = outs
+
+            loss, nll, kl = loss_fn(
+                mu_y, var_y, yt, mu_zc, mu_zct, log_var_zc, log_var_zct
+            )
+            running_loss += loss.item()
+
+        average_val_loss = running_loss / len(val_dataloader)
+
+        model.train()
+        return average_val_loss
+
+
 # here ww will build the class for the best model selectioin in validation dataset.
 import glob
 
-
+# We 
 class Trained_model_selection_in_val_data_set:
     def __init__(self, model, val_dataloader, device, Loss):
         # here model will be a class of model wiith the input arguments.
@@ -253,31 +284,3 @@ class Trained_model_selection_in_val_data_set:
         return best_model
 
 
-
-
-
-
-def validation_function(model, val_dataloader, loss_fn, device):
-    model.eval()
-    running_loss = 0.0
-
-    with torch.no_grad():
-        for x_batch, y_batch in val_dataloader:
-            x_batch = x_batch.to(device)
-            y_batch = y_batch.to(device)
-
-            xc, yc, xt, yt = context_target_split(
-                x_batch, y_batch, min_context=5, max_context=100, num_target=1000
-            )
-
-            outs = model(xc, yc, xt, yt)
-            mu_y, var_y, mu_zc, log_var_zc, mu_zct, log_var_zct = outs
-
-            loss, nll, kl = loss_fn(mu_y, var_y, yt, mu_zc, mu_zct, log_var_zc, log_var_zct
-                    )
-            running_loss += loss.item()
-
-        average_val_loss = running_loss / len(val_dataloader)
-
-        model.train()
-        return average_val_loss

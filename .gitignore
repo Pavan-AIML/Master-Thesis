@@ -5,12 +5,13 @@ __pycache__/
 *.pyd
 
 # Ignore Jupyter notebook checkpoints
-.ipynb_checkpoints/
+.ipynb_checkpoints
 
 # Ignore virtual environment
 venv/
 .env/
 *.env
+.venv/
 .venv39/
 /copy_of_my_copy_modis_pm2_5_delhi_digitcap.py
 # Ignore system files
@@ -32,7 +33,7 @@ data/
 
 # Ignore model weights or checkpoints
 *.pt
-*.pth
+# *.pth
 *.ckpt
 
 # Ignore IDE/project settings

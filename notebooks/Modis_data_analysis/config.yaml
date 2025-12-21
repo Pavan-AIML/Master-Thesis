@@ -30,13 +30,13 @@ output_vars:  ['AOD', 'PM2.5']
 train:
   batch_size: 32
   epochs: 20
-  lr: 0.0001
+  lr: 1e-5
   hist_len: 1
   pred_len: 1
   weight_decay: 0.0005
   early_stop: 10
   test_size: 0.2
-  loss_fn: "MSELoss"
+  # loss_fn: "MSELoss" Loss has been custom designed
   optimizer: "Adam"
 
 
