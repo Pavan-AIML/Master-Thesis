@@ -24,7 +24,7 @@ Data Preprocessing & Analysis
 
 Handle missing values, normalization, and scaling.
 
-Conduct exploratory analysis in notebooks/PM2.5_data_loader_analysis.py.
+Conduct exploratory analysis in Dataloader/PM2.5_data_loader_analysis.py.
 
 Spatially align AOD and PM₂.₅ readings using geolocation metadata.
 

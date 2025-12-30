@@ -22,18 +22,20 @@ ROOT = Path(__file__).resolve().parents[2]  # tests/ -> project root
 sys.path.insert(0, str(ROOT))
 print(ROOT)
 
-from notebooks.Modis_data_analysis.utils import config
+from configs.utils import config
 
 # -------------************---------------------------------
 # loading all the data loaders here we will load the final data in torch.
-from notebooks.Modis_data_analysis.PM25_data_loader_analysis import Modis_data_loader
-from notebooks.Modis_data_analysis.PM25_data_loader_analysis import PM_25_dataloader
-from notebooks.Modis_data_analysis.PM25_data_loader_analysis import (
+from Dataloader.Modis_Data_loader.PM25_data_loader_analysis import Modis_data_loader
+from Dataloader.Modis_Data_loader.PM25_data_loader_analysis import PM_25_dataloader
+from Dataloader.Modis_Data_loader.PM25_data_loader_analysis import (
     combine_the_data_frames,
 )
-from notebooks.Modis_data_analysis.PM25_data_loader_analysis import Training_data_loader
+from Dataloader.Modis_Data_loader.PM25_data_loader_analysis import (
+    Training_data_loader,
+)
 from locationencoder.final_location_encoder import Geospatial_Encoder
-from notebooks.Modis_data_analysis.torch_data_loader import (
+from Dataloader.Modis_Data_loader.torch_data_loader import (
     AirQualityDataset_latlon_AOD_PM25,
     AirQualityDataset_latlon_AOD,
     AirQualityDataset_latlon_PM25,
@@ -41,7 +43,7 @@ from notebooks.Modis_data_analysis.torch_data_loader import (
 )
 
 # importing config files
-from notebooks.Modis_data_analysis.final_loader import (
+from Dataloader.Modis_Data_loader.final_loader import (
     Final_Air_Quality_Dataset_pipeline_latlon_AOD_PM25,
     Final_Air_Quality_Dataset_pipeline_latlon_AOD,
     Final_Air_Quality_Dataset_pipeline_latlon_PM25,
@@ -53,7 +55,7 @@ Validation data set
 """
 
 
-from notebooks.Modis_data_analysis.final_loader import (
+from Dataloader.Modis_Data_loader.final_loader import (
     Final_Air_Quality_Dataset_pipeline_latlon_AOD_PM25_val,
     Final_Air_Quality_Dataset_pipeline_latlon_AOD_val,
     Final_Air_Quality_Dataset_pipeline_latlon_PM25_val,
@@ -64,7 +66,7 @@ from notebooks.Modis_data_analysis.final_loader import (
 """
 Test data set 
 """
-from notebooks.Modis_data_analysis.final_loader import (
+from Dataloader.Modis_Data_loader.final_loader import (
     Final_Air_Quality_Dataset_pipeline_latlon_AOD_PM25_test,
     Final_Air_Quality_Dataset_pipeline_latlon_AOD_test,
     Final_Air_Quality_Dataset_pipeline_latlon_PM25_test,
@@ -289,12 +291,15 @@ final_data_latlong_AOD_PM25[0].unsqueeze(0)[0]
 import torch.optim as optim
 
 
-
 # here we are using ADAM optimizer.
 
 Optimizer = optim.Adam(model_latlon_AOD_PM25.parameters(), lr=config["train"]["lr"])
-Optimizer_latlong_AOD = optim.Adam(model_latlon_AOD.parameters(), lr=config["train"]["lr"])
-Optimizer_latlong_PM25 = optim.Adam(model_latlon_PM25.parameters(), lr=config["train"]["lr"])
+Optimizer_latlong_AOD = optim.Adam(
+    model_latlon_AOD.parameters(), lr=config["train"]["lr"]
+)
+Optimizer_latlong_PM25 = optim.Adam(
+    model_latlon_PM25.parameters(), lr=config["train"]["lr"]
+)
 Optimizer_latlong = optim.Adam(model_latlon.parameters(), lr=config.train.lr)
 
 # Importing the trainer
@@ -522,19 +527,18 @@ Training = NPTrainer(
 # ... definitions above ...
 #
 # Define a "best loss" to track improvement
-best_val_loss = float('inf')
+best_val_loss = float("inf")
 
-for epoch in range(10): # Run for 100 epochs
-
+for epoch in range(10):  # Run for 100 epochs
     # 1. TRAIN
     train_loss = Training.train_epoch(dataloader, epoch)
 
     # 2. VALIDATE (Call the function we just wrote)
     val_loss = validation_function(
-        model=Training.model, # Access model from your Trainer class
-        val_dataloader=dataloader_val, # You need a separate loader for val data
+        model=Training.model,  # Access model from your Trainer class
+        val_dataloader=dataloader_val,  # You need a separate loader for val data
         loss_fn=Loss,
-        device="cpu"
+        device="cpu",
     )
 
     print(f"Epoch {epoch} | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}")
@@ -544,7 +548,6 @@ for epoch in range(10): # Run for 100 epochs
         best_val_loss = val_loss
         Training.save_checkpoint(epoch)
         print(f"   >>> SAVED: New best model found!")
-
 
 
 ##################################################################################

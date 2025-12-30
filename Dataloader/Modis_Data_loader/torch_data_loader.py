@@ -16,12 +16,14 @@ import sys
 ROOT = Path(__file__).resolve().parents[2]  # tests/ -> project root
 sys.path.insert(0, str(ROOT))
 print(ROOT)
-from notebooks.Modis_data_analysis.utils import config
+from configs.utils import config
 
 # importing packages from the earlier file.
-from notebooks.Modis_data_analysis.PM25_data_loader_analysis import Modis_data_loader
-from notebooks.Modis_data_analysis.PM25_data_loader_analysis import PM_25_dataloader
-from notebooks.Modis_data_analysis.PM25_data_loader_analysis import Training_data_loader
+from Dataloader.Modis_Data_loader.PM25_data_loader_analysis import Modis_data_loader
+from Dataloader.Modis_Data_loader.PM25_data_loader_analysis import PM_25_dataloader
+from Dataloader.Modis_Data_loader.PM25_data_loader_analysis import (
+    Training_data_loader,
+)
 from locationencoder.final_location_encoder import Geospatial_Encoder
 
 # geospatial_encoder = Geospatial_Encoder(

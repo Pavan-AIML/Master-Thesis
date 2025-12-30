@@ -6,9 +6,9 @@
 │   ├── Dockerfile
 │   └── entrypoint.sh
 ├── LICENSE
-├── notebooks
+├── Dataloader
 │   ├── __init__.py
-│   └── Modis_data_analysis
+│   └── Modis_Data_loader
 │       ├── __init__.py
 │       ├── __pycache__
 │       ├── data_loader_analysis.py

@@ -8,10 +8,10 @@ __pycache__/
 .ipynb_checkpoints
 
 # Ignore virtual environment
-venv/
+.venv/
 .env/
 *.env
-.venv/
+.venvn/
 .venv39/
 /copy_of_my_copy_modis_pm2_5_delhi_digitcap.py
 # Ignore system files
@@ -39,7 +39,7 @@ data/
 # Ignore IDE/project settings
 .vscode/
 .idea/
-
+.venvn/
 # Ignore temporary outputs
 logs/
 results/

@@ -1,0 +1,192 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Connected to .venvn (3.9.22) (Python 3.9.22)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "5271242e-f70d-41b3-9344-9b3c5d344bec",
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "ModuleNotFoundError",
+     "evalue": "No module named 'Dataloader'",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[0;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[0;31mModuleNotFoundError\u001b[0m                       Traceback (most recent call last)",
+      "File \u001b[1;32m/Users/pavankumar/Documents/Winter_Thesis/Coding_Learning/Master-Thesis/Dataloader/Modis_data_analysis/torch_data_loader.py:1\u001b[0m\n\u001b[0;32m----> 1\u001b[0m \u001b[39mfrom\u001b[39;00m\u001b[39m \u001b[39m\u001b[39mDataloader\u001b[39;00m\u001b[39m.\u001b[39;00m\u001b[39mModis_data_analysis\u001b[39;00m\u001b[39m.\u001b[39;00m\u001b[39mPM25_data_loader_analysis\u001b[39;00m\u001b[39m \u001b[39m\u001b[39mimport\u001b[39;00m Modis_data_loader\n",
+      "\u001b[0;31mModuleNotFoundError\u001b[0m: No module named 'Dataloader'"
+     ]
+    }
+   ],
+   "source": [
+    "from Dataloader.Modis_Data_loader.PM25_data_loader_analysis import Modis_data_loader"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "0ef1787f-f8b4-4a78-9c00-e424167f4086",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "/Users/pavankumar/Documents/Winter_Thesis/Coding_Learning/Master-Thesis\n",
+      "/Users/pavankumar/Documents/Winter_Thesis/Coding_Learning\n",
+      "{'dataset_num_1': 1, 'dataset_num_2': 2, 'dataset_num_3': 3, 'exp_name': 'aod_pm25_prediction', 'input_type_1': 1, 'input_type_2': 2, 'input_type_3': 3, 'input_type_4': 4, 'target_type': ['AOD', 'PM2.5'], 'input_vars': {1: ['latitude', 'longitude', 'AOD', 'PM2.5'], 2: ['latitude', 'longitude', 'AOD'], 3: ['latitude', 'longitude', 'PM2.5'], 4: ['latitude', 'longitude']}}\n"
+     ]
+    }
+   ],
+   "source": [
+    "# importing the required packages.\n",
+    "import torch\n",
+    "from torch.utils.data import Dataset\n",
+    "from torch.utils.data import DataLoader\n",
+    "import pandas as pd\n",
+    "import numpy as np\n",
+    "from datetime import datetime\n",
+    "import arrow  # to get time we use arrow.\n",
+    "import yaml\n",
+    "\n",
+    "\n",
+    "import os\n",
+    "from pathlib import Path\n",
+    "import sys\n",
+    "\n",
+    "ROOT = Path(__file__).resolve().parents[2]  # tests/ -> project root\n",
+    "sys.path.insert(0, str(ROOT))\n",
+    "print(ROOT)\n",
+    "from configs.utils import config\n",
+    "\n",
+    "# importing packages from the earlier file.\n",
+    "from Dataloader.Modis_Data_loader.PM25_data_loader_analysis import Modis_data_loader\n",
+    "from Dataloader.Modis_Data_loader.PM25_data_loader_analysis import PM_25_dataloader"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "e0a12667-7a96-4db9-b59e-bae8216bcf4e",
+   "metadata": {},
+   "outputs": [
+    {
+     "ename": "SyntaxError",
+     "evalue": "unexpected EOF while parsing (<ipython-input-3-64de7fae6698>, line 1)",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[0;36m  Cell \u001b[0;32mIn[3], line 1\u001b[0;36m\u001b[0m\n\u001b[0;31m    from Dataloader.Modis_data_analysis.PM25_data_loader_analysis import (\u001b[0m\n\u001b[0m                                                                          ^\u001b[0m\n\u001b[0;31mSyntaxError\u001b[0m\u001b[0;31m:\u001b[0m unexpected EOF while parsing\n"
+     ]
+    }
+   ],
+   "source": [
+    "from Dataloader.Modis_Data_loader.PM25_data_loader_analysis import ("
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "75285661-352a-4f6a-ab1f-9d8273c6a79f",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from Dataloader.Modis_Data_loader.PM25_data_loader_analysis import (\n",
+    "    Training_data_loader,\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "No kernel connected"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Connected to .venvn (3.9.22) (Python 3.9.22)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "46a98ef3-d59c-492f-9dc3-200b1ad65d40",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import torch\n",
+    "from torch.utils.data import Dataset\n",
+    "from torch.utils.data import DataLoader\n",
+    "import pandas as pd\n",
+    "import numpy as np\n",
+    "from datetime import datetime\n",
+    "import arrow  # to get time we use arrow.\n",
+    "import yaml"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "d11f1a3b-0017-458d-b661-2610041a79d2",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import os\n",
+    "from pathlib import Path\n",
+    "import sys"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "76a427a9-9d8e-4d82-83d7-4a49c8c10a47",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "/Users/pavankumar/Documents/Winter_Thesis/Coding_Learning/Master-Thesis\n",
+      "/Users/pavankumar/Documents/Winter_Thesis/Coding_Learning\n",
+      "{'dataset_num_1': 1, 'dataset_num_2': 2, 'dataset_num_3': 3, 'exp_name': 'aod_pm25_prediction', 'input_type_1': 1, 'input_type_2': 2, 'input_type_3': 3, 'input_type_4': 4, 'target_type': ['AOD', 'PM2.5'], 'input_vars': {1: ['latitude', 'longitude', 'AOD', 'PM2.5'], 2: ['latitude', 'longitude', 'AOD'], 3: ['latitude', 'longitude', 'PM2.5'], 4: ['latitude', 'longitude']}}\n"
+     ]
+    }
+   ],
+   "source": [
+    "ROOT = Path(__file__).resolve().parents[2]  # tests/ -> project root\n",
+    "sys.path.insert(0, str(ROOT))\n",
+    "print(ROOT)\n",
+    "from configs.utils import config"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "No kernel connected"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": ".venvn (3.9.22)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "name": "python",
+   "version": "3.9.22"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
