@@ -69,3 +69,15 @@ Subhojit_folder/Subhojit.py
 Subhojit_folder/__pycache__/
 Subhojit_folder/Subhojit.ipynb
 Subhojit_folder/data/
+Subhojit_folder/venv/
+Subhojit_folder/.vscode/
+Subhojit_folder/.idea/
+Subhojit_folder/.env
+Subhojit_folder/.mypy_cache/
+Subhojit_folder/.pytest_cache/
+Subhojit_folder/doc/
+Subhojit_folder/experiments/
+Subhojit_folder/logs/
+Subhojit_folder/Extrafiles/
+Subhojit_folder/subhojit_experiments/
+*.pytest_cache/.venvn/

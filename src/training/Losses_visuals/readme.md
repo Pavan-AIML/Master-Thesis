@@ -22,4 +22,8 @@
 
 <h4 align = "center" >In this data-set we will have only PM2.5 as an output and the input variables will be lat, long, AOD, PM2.5 values. <h4>
 
+```js
+Inputs = [latitude, longitude, AOD, PM2.5]
+Outputs = [PM2.5]
+```
 
