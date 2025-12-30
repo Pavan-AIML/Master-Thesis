@@ -1,0 +1,96 @@
+# In this config.yaml file we will mention all the parameters used in our project. 
+
+
+experiments:
+  dataset_num_1: 1
+  dataset_num_2: 2
+  dataset_num_3: 3
+
+  # model: MLP
+  exp_name: "aod_pm25_prediction"
+  input_type_1: 1
+  input_type_2: 2
+  input_type_3: 3
+  input_type_4: 4
+  target_type: ["AOD", "PM2.5"]
+
+# here we define the possible input feature combinations 
+
+  
+  input_vars:
+    1: ['latitude', 'longitude','AOD', 'PM2.5']
+    2: ['latitude', 'longitude','AOD']
+    3: ['latitude', 'longitude','PM2.5']
+    4: ['latitude', 'longitude']
+
+# feature_sets
+
+output_vars:  ['AOD', 'PM2.5']
+
+train:
+  batch_size: 32
+  epochs: 20
+  lr: 1e-5
+  hist_len: 1
+  pred_len: 1
+  weight_decay: 0.0005
+  early_stop: 10
+  test_size: 0.2
+  # loss_fn: "MSELoss" Loss has been custom designed
+  optimizer: "Adam"
+
+
+# this section will come later.
+
+filepath:
+  local:
+    data_dir: 
+
+# total len of data set 15667
+
+# After exploring the data I found that the data start date and data end dates are below.
+
+dataset:
+            #  year, month, day, hour, minute
+  data_start: [[2020,1,3,0,0], GMT]
+            #  year, month, day, hour, minute
+  data_end: [[2022,12,30,0,0], GMT]
+
+# we have set the numbe r1 as we have just one data set and that we have devided in train, val, test datasets. 
+
+
+  1:            
+  # train data considered percent is 80 %   
+    train_start: [[2020, 1, 3], GMT]
+    train_end: [[2022, 5, 14], GMT]
+
+  # val data considered percent is 10 % 
+    val_start: [[2022, 5, 16], GMT]
+    val_end: [[2022, 9, 26], GMT]
+
+  # test data considered percent is 10 % 
+    test_start: [[2022, 9, 28], GMT]
+    test_end: [[2022, 12, 30], GMT]
+
+# to convert the lat, long to the embeddings 
+
+Geo_spatial_Encoder:
+
+  dim_in: 100
+  dim_hidden: 128
+  dim_out: 126
+  num_layers: 6
+
+
+Trainig_parameters:
+  seed: 42
+  device: "cpu"  # "cuda" or "cpu"
+  beta: 
+  learning_rate: 
+  stepsize:
+  Number_of_steps:
+  batch_size: 
+
+
+
+

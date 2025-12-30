@@ -9,7 +9,7 @@ sys.path.insert(0, str(ROOT))
 print(ROOT)
 
 
-folder_path = "/Users/pavankumar/Documents/Winter_Thesis/Coding_Learning/Master-Thesis/notebooks/Modis_data_analysis"
+folder_path = "/Users/pavankumar/Documents/Winter_Thesis/Coding_Learning/Master-Thesis/Dataloader/Modis_Data_loader"
 yaml_path = os.path.join(folder_path, "config.yaml")
 
 with open(yaml_path, "r") as file:

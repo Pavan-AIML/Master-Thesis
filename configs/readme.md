@@ -1,1 +1,0 @@
-<h1/> All the config files are inside the Notebooks/Modis_data_analysis folder<h1>

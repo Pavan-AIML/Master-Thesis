@@ -24,17 +24,19 @@ print(ROOT)
 # -------------************---------------------------------
 # loading all the data loaders
 
-from notebooks.Modis_data_analysis.PM25_data_loader_analysis import Modis_data_loader
+from Dataloader.Modis_Data_loader.PM25_data_loader_analysis import Modis_data_loader
 
-from notebooks.Modis_data_analysis.PM25_data_loader_analysis import PM_25_dataloader
+from Dataloader.Modis_Data_loader.PM25_data_loader_analysis import PM_25_dataloader
 
-from notebooks.Modis_data_analysis.PM25_data_loader_analysis import (
+from Dataloader.Modis_Data_loader.PM25_data_loader_analysis import (
     combine_the_data_frames,
 )
 
-from notebooks.Modis_data_analysis.PM25_data_loader_analysis import Training_data_loader
+from Dataloader.Modis_Data_loader.PM25_data_loader_analysis import (
+    Training_data_loader,
+)
 from locationencoder.final_location_encoder import Geospatial_Encoder
-from notebooks.Modis_data_analysis.torch_data_loader import (
+from Dataloader.Modis_Data_loader.torch_data_loader import (
     AirQualityDataset_latlon_AOD_PM25,
     AirQualityDataset_latlon_PM25,
     AirQualityDataset_latlon_AOD,
@@ -43,10 +45,10 @@ from notebooks.Modis_data_analysis.torch_data_loader import (
 
 
 # importing config files
-from notebooks.Modis_data_analysis.utils import config
+from configs.utils import config
 from torch.utils.data import DataLoader
 
-
+from configs import config
 # -------------************---------------------------------
 
 
