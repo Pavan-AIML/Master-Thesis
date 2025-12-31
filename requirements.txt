@@ -22,4 +22,4 @@ numpy
 scikit-learn
 seaborn
 jupyter
-
+tensorboard

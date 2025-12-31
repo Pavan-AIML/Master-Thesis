@@ -290,17 +290,21 @@ final_data_latlong_AOD_PM25[0].unsqueeze(0)[0]
 # Importing the optimizer
 import torch.optim as optim
 
-
+float(float(config["train"]["lr"]))
 # here we are using ADAM optimizer.
 
-Optimizer = optim.Adam(model_latlon_AOD_PM25.parameters(), lr=config["train"]["lr"])
+Optimizer = optim.Adam(
+    model_latlon_AOD_PM25.parameters(), lr=float(config["train"]["lr"])
+)
 Optimizer_latlong_AOD = optim.Adam(
-    model_latlon_AOD.parameters(), lr=config["train"]["lr"]
+    model_latlon_AOD.parameters(), lr=float(config["train"]["lr"])
 )
 Optimizer_latlong_PM25 = optim.Adam(
-    model_latlon_PM25.parameters(), lr=config["train"]["lr"]
+    model_latlon_PM25.parameters(), lr=float(config["train"]["lr"])
 )
-Optimizer_latlong = optim.Adam(model_latlon.parameters(), lr=config.train.lr)
+Optimizer_latlong = optim.Adam(
+    model_latlon.parameters(), lr=float(config["train"]["lr"])
+)
 
 # Importing the trainer
 

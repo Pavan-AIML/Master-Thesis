@@ -21,6 +21,7 @@ from datetime import datetime
 ROOT = Path(__file__).resolve().parents[2]  # tests/ -> project root
 sys.path.insert(0, str(ROOT))
 print(ROOT)
+from configs.utils import config
 # -------------************---------------------------------
 # loading all the data loaders
 
@@ -45,10 +46,10 @@ from Dataloader.Modis_Data_loader.torch_data_loader import (
 
 
 # importing config files
-from configs.utils import config
+
 from torch.utils.data import DataLoader
 
-from configs import config
+
 # -------------************---------------------------------
 
 
