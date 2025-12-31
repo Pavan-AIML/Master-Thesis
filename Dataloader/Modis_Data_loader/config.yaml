@@ -25,7 +25,7 @@ experiments:
 
 # feature_sets
 
-output_vars:  ['AOD', 'PM2.5']
+output_vars_1:  ['AOD', 'PM2.5']
 
 train:
   batch_size: 32

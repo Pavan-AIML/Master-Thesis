@@ -25,7 +25,9 @@ experiments:
 
 # feature_sets
 
-output_vars:  ['AOD', 'PM2.5']
+output_vars_1:  ['AOD', 'PM2.5']
+output_vars_2:  ['AOD']
+output_vars_3:  ['PM2.5']
 
 train:
   batch_size: 32
@@ -38,7 +40,6 @@ train:
   test_size: 0.2
   # loss_fn: "MSELoss" Loss has been custom designed
   optimizer: "Adam"
-
 
 # this section will come later.
 

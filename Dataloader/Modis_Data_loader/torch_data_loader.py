@@ -35,7 +35,7 @@ from locationencoder.final_location_encoder import Geospatial_Encoder
 
 # here we will be building the class for getting our data in batches using torch data loader.
 # in the torch we need to define 2 items clearly __len__(), __getitem__()
-# config["output_vars"]# defining the output variable here.
+# config["output_vars_1"]# defining the output variable here.
 
 
 class AirQualityDataset_latlon_AOD_PM25(Dataset):
@@ -71,7 +71,7 @@ class AirQualityDataset_latlon_AOD_PM25(Dataset):
         # these are the input columns for the model
         self.input_cols = self.config["experiments"]["input_vars"][input_type_1]
         # these are the targets
-        self.target_cols = self.config["output_vars"]
+        self.target_cols = self.config["output_vars_1"]
 
         # here we will select the range of the train, test and validation of data sets.
         # select date range
@@ -165,7 +165,7 @@ class AirQualityDataset_latlon_AOD(Dataset):
         # these are the input columns for the model
         self.input_cols = self.config["experiments"]["input_vars"][input_type_2]
         # these are the targets
-        self.target_cols = self.config["output_vars"]
+        self.target_cols = self.config["output_vars_1"]
 
         # here we will select the range of the train, test and validation of data sets.
         # select date range
@@ -253,7 +253,7 @@ class AirQualityDataset_latlon_PM25(Dataset):
         # these are the input columns for the model
         self.input_cols = self.config["experiments"]["input_vars"][input_type_3]
         # these are the targets
-        self.target_cols = self.config["output_vars"]
+        self.target_cols = self.config["output_vars_1"]
 
         # here we will select the range of the train, test and validation of data sets.
         # select date range
@@ -336,7 +336,7 @@ class AirQualityDataset_latlon(Dataset):
         # these are the input columns for the model
         self.input_cols = self.config["experiments"]["input_vars"][input_type_4]
         # these are the targets
-        self.target_cols = self.config["output_vars"]
+        self.target_cols = self.config["output_vars_1"]
 
         # here we will select the range of the train, test and validation of data sets.
         # select date range
