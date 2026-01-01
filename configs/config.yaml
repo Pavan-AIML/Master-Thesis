@@ -25,6 +25,11 @@ experiments:
 
 # feature_sets
 
+  output_vars:
+    1: ['AOD', 'PM2.5']
+    2: ['AOD']
+    3: ['PM2.5']
+
 output_vars_1:  ['AOD', 'PM2.5']
 output_vars_2:  ['AOD']
 output_vars_3:  ['PM2.5']

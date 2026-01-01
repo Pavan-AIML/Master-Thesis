@@ -2,6 +2,9 @@
 
 
 experiments:
+
+# This is to use the different kinds of datasets, in our experiments. 
+
   dataset_num_1: 1
   dataset_num_2: 2
   dataset_num_3: 3
@@ -72,7 +75,8 @@ dataset:
     test_start: [[2022, 9, 28], GMT]
     test_end: [[2022, 12, 30], GMT]
 
-# to convert the lat, long to the embeddings 
+# to convert the lat, long to the embeddings and these are the fix values those does not change.
+
 
 Geo_spatial_Encoder:
 

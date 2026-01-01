@@ -35,12 +35,360 @@ from Dataloader.Modis_Data_loader.PM25_data_loader_analysis import (
     Training_data_loader,
 )
 from locationencoder.final_location_encoder import Geospatial_Encoder
+geospatial_encoder = Geospatial_Encoder(
+            config["Geo_spatial_Encoder"]["dim_in"],
+            config["Geo_spatial_Encoder"]["dim_hidden"],
+            config["Geo_spatial_Encoder"]["dim_out"],
+            config["Geo_spatial_Encoder"]["num_layers"],
+        )
+from Dataloader.Modis_Data_loader.torch_data_loader import Airqualitydataset
+from Dataloader.Modis_Data_loader.final_loader import Final_Air_Quality_Dataset_pipeline
+
+
+""" In the belowmethod it is hard to make these many types of combinations so we will make a loop of input, output types and flags to create the final datasets."""
+
+
+input_type = [1,2,3,4]
+output_type = [1,2,3]
+flag = ["Train", "Val", "Test"]
+
+# Now we will loop over all the combinations to create the final datasets.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+"""   For type 1 target_columns = ['AOD', 'PM2.5'] & Training dataset      """
+
+
+# for type 1 target_columns = ['AOD', 'PM2.5'] & Training dataset
+
+#                       Training data
+
+Final_Data_Train_latlong_AOD_PM25 = Final_Air_Quality_Dataset_pipeline(
+    config=config, geospatial_encoder =geospatial_encoder ,flag="Train", input_type=1, output_type=1)
+
+
+Final_Data_Train_latlong_AOD_PM25 = Final_Data_Train_latlong_AOD_PM25.full_pipeline()
+Final_Data_Train_latlong_AOD_PM25[0].shape
+
+Final_Data_Train_latlong_AOD = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Train", input_type=2, output_type=1
+)
+Final_Data_Train_latlong_AOD = Final_Data_Train_latlong_AOD.full_pipeline()
+Final_Data_Train_latlong_AOD[0].shape
+Final_Data_Train_latlong_PM25 = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Train", input_type=3, output_type=1
+)
+Final_Data_Train_latlong_PM25 = Final_Data_Train_latlong_PM25.full_pipeline()
+Final_Data_Train_latlong_PM25[0].shape
+
+Final_Data_Train_latlong = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Train", input_type=4, output_type=1
+)
+Final_Data_Train_latlong = Final_Data_Train_latlong.full_pipeline()
+Final_Data_Train_latlong[0].shape
+
+
+#                     Val data
+
+
+Final_Data_Train_latlong_AOD_PM25 = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Val", input_type=1, output_type=1
+)
+Final_Data_Train_latlong_AOD_PM25 = Final_Data_Train_latlong_AOD_PM25.full_pipeline()
+Final_Data_Train_latlong_AOD_PM25[0].shape
+
+Final_Data_Train_latlong_AOD = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Val", input_type=2, output_type=1
+)
+Final_Data_Train_latlong_AOD = Final_Data_Train_latlong_AOD.full_pipeline()
+Final_Data_Train_latlong_AOD[0].shape
+Final_Data_Train_latlong_PM25 = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Val", input_type=3, output_type=1
+)
+Final_Data_Train_latlong_PM25 = Final_Data_Train_latlong_PM25.full_pipeline()
+Final_Data_Train_latlong_PM25[0].shape
+
+Final_Data_Train_latlong = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Val", input_type=4, output_type=1
+)
+Final_Data_Train_latlong = Final_Data_Train_latlong.full_pipeline()
+Final_Data_Train_latlong[0].shape
+
+
+#                          Test data
+
+
+Final_Data_Train_latlong_AOD_PM25 = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Test", input_type=1, output_type=1
+)
+Final_Data_Train_latlong_AOD_PM25 = Final_Data_Train_latlong_AOD_PM25.full_pipeline()
+Final_Data_Train_latlong_AOD_PM25[0].shape
+
+Final_Data_Train_latlong_AOD = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Test", input_type=2, output_type=1
+)
+Final_Data_Train_latlong_AOD = Final_Data_Train_latlong_AOD.full_pipeline()
+Final_Data_Train_latlong_AOD[0].shape
+Final_Data_Train_latlong_PM25 = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Test", input_type=3, output_type=1
+)
+Final_Data_Train_latlong_PM25 = Final_Data_Train_latlong_PM25.full_pipeline()
+Final_Data_Train_latlong_PM25[0].shape
+
+Final_Data_Train_latlong = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Test", input_type=4, output_type=1
+)
+Final_Data_Train_latlong = Final_Data_Train_latlong.full_pipeline()
+Final_Data_Train_latlong[0].shape
+
+
+"""   For type 2 target_columns = ['AOD'] & Training dataset      """
+
+
+#                       Training data
+
+Final_Data_Train_latlong_AOD_PM25 = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Train", input_type=1, output_type=2
+)
+Final_Data_Train_latlong_AOD_PM25 = Final_Data_Train_latlong_AOD_PM25.full_pipeline()
+Final_Data_Train_latlong_AOD_PM25[0].shape
+
+Final_Data_Train_latlong_AOD = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Train", input_type=2, output_type=2
+)
+Final_Data_Train_latlong_AOD = Final_Data_Train_latlong_AOD.full_pipeline()
+Final_Data_Train_latlong_AOD[0].shape
+Final_Data_Train_latlong_PM25 = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Train", input_type=3, output_type=2
+)
+Final_Data_Train_latlong_PM25 = Final_Data_Train_latlong_PM25.full_pipeline()
+Final_Data_Train_latlong_PM25[0].shape
+
+Final_Data_Train_latlong = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Train", input_type=4, output_type=2
+)
+Final_Data_Train_latlong = Final_Data_Train_latlong.full_pipeline()
+Final_Data_Train_latlong[0].shape
+
+
+#                     Val data
+
+
+Final_Data_Val_latlong_AOD_PM25 = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Val", input_type=1, output_type=2
+)
+Final_Data_Val_latlong_AOD_PM25 = Final_Data_Val_latlong_AOD_PM25.full_pipeline()
+Final_Data_Val_latlong_AOD_PM25[0].shape
+
+Final_Data_Val_latlong_AOD = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Val", input_type=2, output_type=2
+)
+Final_Data_Val_latlong_AOD = Final_Data_Val_latlong_AOD.full_pipeline()
+Final_Data_Val_latlong_AOD[0].shape
+Final_Data_Val_latlong_PM25 = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Val", input_type=3, output_type=2
+)
+Final_Data_Val_latlong_PM25 = Final_Data_Val_latlong_PM25.full_pipeline()
+Final_Data_Val_latlong_PM25[0].shape
+
+Final_Data_Val_latlong = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Val", input_type=4, output_type=2
+)
+Final_Data_Val_latlong = Final_Data_Val_latlong.full_pipeline()
+Final_Data_Val_latlong[0].shape
+
+
+#                          Test data
+
+
+Final_Data_Test_latlong_AOD_PM25 = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Test", input_type=1, output_type=2
+)
+Final_Data_Test_latlong_AOD_PM25 = Final_Data_Test_latlong_AOD_PM25.full_pipeline()
+Final_Data_Test_latlong_AOD_PM25[0].shape
+
+Final_Data_Test_latlong_AOD = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Test", input_type=2, output_type=2
+)
+Final_Data_Test_latlong_AOD = Final_Data_Test_latlong_AOD.full_pipeline()
+Final_Data_Test_latlong_AOD[0].shape
+Final_Data_Test_latlong_PM25 = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Test", input_type=3, output_type=2
+)
+Final_Data_Test_latlong_PM25 = Final_Data_Test_latlong_PM25.full_pipeline()
+Final_Data_Test_latlong_PM25[0].shape
+Final_Data_Test_latlong = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Test", input_type=4, output_type=2
+)
+Final_Data_Test_latlong = Final_Data_Test_latlong.full_pipeline()
+Final_Data_Test_latlong[0].shape
+
+
+"""   For type 3 target_columns = ['PM2.5'] & Training dataset      """
+
+#                       Training data
+
+Final_Data_Train_latlong_AOD_PM25 = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Train", input_type=1, output_type=3
+)
+Final_Data_Train_latlong_AOD_PM25 = Final_Data_Train_latlong_AOD_PM25.full_pipeline()
+Final_Data_Train_latlong_AOD_PM25[0].shape
+
+Final_Data_Train_latlong_AOD = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Train", input_type=2, output_type=3
+)
+Final_Data_Train_latlong_AOD = Final_Data_Train_latlong_AOD.full_pipeline()
+Final_Data_Train_latlong_AOD[0].shape
+Final_Data_Train_latlong_PM25 = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Train", input_type=3, output_type=3
+)
+Final_Data_Train_latlong_PM25 = Final_Data_Train_latlong_PM25.full_pipeline()
+Final_Data_Train_latlong_PM25[0].shape
+
+Final_Data_Train_latlong = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Train", input_type=4, output_type=3
+)
+Final_Data_Train_latlong = Final_Data_Train_latlong.full_pipeline()
+Final_Data_Train_latlong[0].shape
+
+
+#                     Val data
+
+
+Final_Data_Val_latlong_AOD_PM25 = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Val", input_type=1, output_type=3
+)
+Final_Data_Val_latlong_AOD_PM25 = Final_Data_Train_latlong_AOD_PM25.full_pipeline()
+Final_Data_Val_latlong_AOD_PM25[0].shape
+
+Final_Data_Val_latlong_AOD = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Val", input_type=2, output_type=3
+)
+Final_Data_Val_latlong_AOD = Final_Data_Val_latlong_AOD.full_pipeline()
+Final_Data_Val_latlong_AOD[0].shape
+Final_Data_Val_latlong_PM25 = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Val", input_type=3, output_type=3
+)
+Final_Data_Val_latlong_PM25 = Final_Data_Val_latlong_PM25.full_pipeline()
+Final_Data_Val_latlong_PM25[0].shape
+Final_Data_Val_latlong = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Val", input_type=4, output_type=3
+)
+Final_Data_Val_latlong = Final_Data_Val_latlong.full_pipeline()
+Final_Data_Val_latlong[0].shape
+
+
+#                          Test data
+
+
+Final_Data_Test_latlong_AOD_PM25 = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Test", input_type=1, output_type=3
+)
+Final_Data_Test_latlong_AOD_PM25 = Final_Data_Test_latlong_AOD_PM25.full_pipeline()
+Final_Data_Test_latlong_AOD_PM25[0].shape
+
+Final_Data_Test_latlong_AOD = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Test", input_type=2, output_type=3
+)
+Final_Data_Test_latlong_AOD = Final_Data_Test_latlong_AOD.full_pipeline()
+Final_Data_Test_latlong_AOD[0].shape
+Final_Data_Test_latlong_PM25 = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Test", input_type=3, output_type=3
+)
+Final_Data_Test_latlong_PM25 = Final_Data_Test_latlong_PM25.full_pipeline()
+Final_Data_Test_latlong_PM25[0].shape
+Final_Data_Test_latlong = Final_Air_Quality_Dataset_pipeline(
+    config=config, flag="Test", input_type=4, output_type=3
+)
+Final_Data_Test_latlong = Final_Data_Test_latlong.full_pipeline()
+Final_Data_Test_latlong[0].shape
+
+
+
+
+
+
+
+
+
+
+
+# we will lets down the final data sets 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#                       Validation data
+
+
+# .........................................................
+
 from Dataloader.Modis_Data_loader.torch_data_loader import (
     AirQualityDataset_latlon_AOD_PM25,
     AirQualityDataset_latlon_AOD,
     AirQualityDataset_latlon_PM25,
     AirQualityDataset_latlon,
+    Airqualitydataset,
 )
+
 
 # importing config files
 from Dataloader.Modis_Data_loader.final_loader import (
@@ -48,6 +396,7 @@ from Dataloader.Modis_Data_loader.final_loader import (
     Final_Air_Quality_Dataset_pipeline_latlon_AOD,
     Final_Air_Quality_Dataset_pipeline_latlon_PM25,
     Final_Air_Quality_Dataset_pipeline_latlon,
+    Final_Air_Quality_Dataset_pipeline,
 )
 
 """

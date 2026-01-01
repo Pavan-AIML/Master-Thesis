@@ -38,6 +38,106 @@ from locationencoder.final_location_encoder import Geospatial_Encoder
 # config["output_vars_1"]# defining the output variable here.
 
 
+# Here we will make the optimized code that will be used to replace all the classes those are lying extra here.
+
+
+"""
+Creating the common data loader classes for different data sets.
+"""
+
+
+class Airqualitydataset(Dataset):
+    def __init__(self, df, config, flag="Train", input_type=1, output_type=1):
+        # input types can be 1,2,3
+        # output_types can be 1,2,3
+
+        self.df = df
+        self.config = config
+        self.input_type = input_type
+        self.output_type = output_type
+        self.flag = flag
+        self.input_cols = self.config["experiments"]["input_vars"][self.input_type]
+        self.output_cols = self.config["experiments"]["output_vars"][self.output_type]
+        config_ds_format = self.config["dataset"][
+            self.config["experiments"]["dataset_num_1"]
+        ]
+
+        if flag == "Train":
+            a, b = "train_start", "train_end"
+        elif flag == "Val":
+            a, b = "val_start", "val_end"
+        elif flag == "Test":
+            a, b = "test_start", "test_end"
+        else:
+            raise ValueError("flag is not matching with Train, Val, Test")
+
+        self.start_time = self._get_time(config_ds_format[a])
+        self.end_time = self._get_time(config_ds_format[b])
+
+        self.df["date"] = pd.to_datetime(self.df["date"])
+        self.data = self.df[
+            (self.df["date"] >= self.start_time) & (self.df["date"] <= self.end_time)
+        ]
+        self.mean_AOD = self.data["AOD"].mean()
+        self.std_AOD = self.data["AOD"].std() + 1e-8
+        self.mean_PM25 = self.data["PM2.5"].mean()
+        self.std_PM25 = self.data["PM2.5"].std() + 1e-8
+
+        self.idx_input_AOD = self._get_col_index(self.input_cols, "AOD")
+        self.idx_input_PM25 = self._get_col_index(self.input_cols, "PM2.5")
+        self.idx_output_AOD = self._get_col_index(self.output_cols, "AOD")
+        self.idx_output_PM25 = self._get_col_index(self.output_cols, "PM2.5")
+
+    def _get_col_index(self, col_list, target_name):
+        try:
+            return col_list.index(target_name)
+        except ValueError:
+            return None
+
+    def _get_time(self, time_yaml):
+        arrow_time = arrow.get(datetime(*time_yaml[0]), time_yaml[1]).naive
+        return arrow_time
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, index):
+        data_rows = self.data.iloc[index]
+        x = torch.tensor(
+            pd.to_numeric(data_rows[self.input_cols], errors="coerce")
+            .astype(np.float32)
+            .values,
+            dtype=torch.float32,
+        )
+        y = torch.tensor(
+            pd.to_numeric(data_rows[self.output_cols], errors="coerce")
+            .astype(np.float32)
+            .values,
+            dtype=torch.float32,
+        )
+        
+    # Now here we have normalized the AOD and PM2.5 values and have made them dynamics if the input and output columns exists in the given data set.
+    
+        if self.idx_input_AOD is not None:
+            x[self.idx_input_AOD] = (
+                x[self.idx_input_AOD] - self.mean_AOD
+            ) / self.std_AOD
+        if self.idx_input_PM25 is not None:
+            x[self.idx_input_PM25] = (
+                x[self.idx_input_PM25] - self.mean_PM25
+            ) / self.std_PM25
+        if self.idx_output_AOD is not None:
+            y[self.idx_output_AOD] = (
+                y[self.idx_output_AOD] - self.mean_AOD
+            ) / self.std_AOD
+        if self.idx_output_PM25 is not None:
+            y[self.idx_output_PM25] = (
+                y[self.idx_output_PM25] - self.mean_PM25
+            ) / self.std_PM25
+
+        return x, y
+
+
 class AirQualityDataset_latlon_AOD_PM25(Dataset):
     # here flag will be default Train but if we assign something new it will consider that
     # here the df will be the df coming out from our final trainig data from PM25_data_loader_analysis file
@@ -49,17 +149,19 @@ class AirQualityDataset_latlon_AOD_PM25(Dataset):
         self.df = df
         self.config = config
         self.flag = flag
-        self.geospatial_encoder = Geospatial_Encoder(
-            config["Geo_spatial_Encoder"]["dim_in"],
-            config["Geo_spatial_Encoder"]["dim_hidden"],
-            config["Geo_spatial_Encoder"]["dim_out"],
-            config["Geo_spatial_Encoder"]["num_layers"],
-        )
+        # self.geospatial_encoder = Geospatial_Encoder(
+        #     config["Geo_spatial_Encoder"]["dim_in"],
+        #     config["Geo_spatial_Encoder"]["dim_hidden"],
+        #     config["Geo_spatial_Encoder"]["dim_out"],
+        #     config["Geo_spatial_Encoder"]["num_layers"],
+        # )
         # Here as we are taking the data from config file the number of data sets it will make our code to make it moduler to also accept more than one data set if we have in future.
 
         self.dataset_number = self.config["experiments"]["dataset_num_1"]
 
         # This we use to extract the training, test and validation data sets dates in the given config file.
+
+        # this value is giving all the train and test values as per the flag.
 
         ds_cfg = self.config["dataset"][self.dataset_number]
         # Select input and target in such as way that we can change it later to do the changes easily.
@@ -70,6 +172,7 @@ class AirQualityDataset_latlon_AOD_PM25(Dataset):
 
         # these are the input columns for the model
         self.input_cols = self.config["experiments"]["input_vars"][input_type_1]
+
         # these are the targets
         self.target_cols = self.config["output_vars_1"]
 
