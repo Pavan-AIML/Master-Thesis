@@ -129,11 +129,11 @@ from optimizer_utils import validation_function
 
 for input_key in input_type:
     if input_key == "":
-        print("Please enter the input keys correctly")
+        print("Please check the input keys")
         continue
     for output_key in output_type:
         if output_key == "":
-            print("Please enter the output keys correctly")
+            print("Please check the output keys")
             continue
         print(f" Start Training of Input: {input_key} | Output : {output_key}")
         # the current inputs and current outputs are:
@@ -166,47 +166,49 @@ for input_key in input_type:
         # To check the model's accuracy in validation data set we will use this.
         best_val_loss = float("inf")
         # these are the training data sets
-        NeuralProcess_Train_datasets = {}
-        NeuralProcess_Train_datasets[(input_key, output_key)] = (
+
+        NeuralProcess_Train_data = (
             neural_process_data(datasets[(input_key, output_key, "Train")]["inputs"]),
-            neural_process_data(datasets[(input_key, output_key, "Train")]["outputs"]),
+            datasets[(input_key, output_key, "Train")]["outputs"],
         )
-        NeuralProcess_dataloaders = {}
-        NeuralProcess_dataloaders[(input_key, output_key)] = DataLoader(
-            NeuralProcess_Train_datasets[(input_key, output_key)],
+        NeuralProcess_Train_dataloader = DataLoader(
+            NeuralProcess_Train_data,
             batch_size=16,
             shuffle=True,
             num_workers=0,
         )
         # Now we will define the validation datasets as well as validation dataloasers
-        NeuralProcess_Val_datasets = {}
-        NeuralProcess_Val_datasets[(input_key, output_key)] = (
+        # NeuralProcess_Val_datasets = {}
+        NeuralProcess_Val_data = (
             neural_process_data(datasets[(input_key, output_key, "Val")]["inputs"]),
-            neural_process_data(datasets[(input_key, output_key, "Val")]["outputs"]),
+            datasets[(input_key, output_key, "Val")]["outputs"],
         )
-        NeuralProcess_Val_dataloaders = {}
-        NeuralProcess_Val_dataloaders[(input_key, output_key)] = DataLoader(
-            NeuralProcess_Val_datasets[(input_key, output_key)],
+
+        # NeuralProcess_Val_dataloaders = {}
+        NeuralProcess_Val_dataloader = DataLoader(
+            NeuralProcess_Val_data,
             batch_size=16,
             shuffle=True,
             num_workers=0,
         )
+
         for epoch in range(100):
             # Train
-            train_loss = Training.train_epoch(
-                NeuralProcess_dataloaders[(input_key, output_key)], epoch
-            )
+            train_loss = Training.train_epoch(NeuralProcess_Train_dataloader, epoch)
             val_loss = validation_function(
                 model=model,
-                val_dataloader=NeuralProcess_Val_dataloaders[(input_key, output_key)],
+                val_dataloader=NeuralProcess_Val_dataloader,
                 loss=Loss,
                 device="cpu",
             )
-            print(f"Epoch:{epoch} | Val_loss:{val_loss} | Train_loss:{train_loss}")
+            print(
+                f"Epoch:{epoch} | Val_loss:{val_loss:.4f} | Train_loss:{train_loss:.4f}"
+            )
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
                 Training.save_checkpoint(epoch)
                 print(f" >>> Saved New Best Model found! ")
+
 # NeuraProcessData_latlon_PM25 = neural_process_data(
 #     fnal_data_latlong_PM25[0],
 #     fnal_data_latlong_PM25[1],
