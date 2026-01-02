@@ -14,6 +14,7 @@ from glob import glob
 from tqdm import tqdm
 import arrow
 from datetime import datetime
+from torch import optim
 
 # from utils.config import config
 from torch.utils.data import DataLoader
@@ -35,64 +36,330 @@ from Dataloader.Modis_Data_loader.PM25_data_loader_analysis import (
     Training_data_loader,
 )
 from locationencoder.final_location_encoder import Geospatial_Encoder
+
 geospatial_encoder = Geospatial_Encoder(
-            config["Geo_spatial_Encoder"]["dim_in"],
-            config["Geo_spatial_Encoder"]["dim_hidden"],
-            config["Geo_spatial_Encoder"]["dim_out"],
-            config["Geo_spatial_Encoder"]["num_layers"],
-        )
+    config["Geo_spatial_Encoder"]["dim_in"],
+    config["Geo_spatial_Encoder"]["dim_hidden"],
+    config["Geo_spatial_Encoder"]["dim_out"],
+    config["Geo_spatial_Encoder"]["num_layers"],
+)
 from Dataloader.Modis_Data_loader.torch_data_loader import Airqualitydataset
 from Dataloader.Modis_Data_loader.final_loader import Final_Air_Quality_Dataset_pipeline
+from src.Models.neural_process import NeuralProcess
 
 
 """ In the belowmethod it is hard to make these many types of combinations so we will make a loop of input, output types and flags to create the final datasets."""
 
 
-input_type = [1,2,3,4]
-output_type = [1,2,3]
+"""
+  input_vars:
+    1: ['latitude', 'longitude','AOD', 'PM2.5']
+    2: ['latitude', 'longitude','AOD']
+    3: ['latitude', 'longitude','PM2.5']
+    4: ['latitude', 'longitude']
+
+# feature_sets
+
+  output_vars:
+    1: ['AOD', 'PM2.5']
+    2: ['AOD']
+    3: ['PM2.5']
+
+"""
+
+
+input_type = [1, 2, 3, 4]
+output_type = [1, 2, 3]
 flag = ["Train", "Val", "Test"]
 
 # Now we will loop over all the combinations to create the final datasets.
+datasets = {}
+for i in input_type:
+    if i == "":
+        print("Invalid input type")
+        continue
+    for j in output_type:
+        if j == "":
+            print("Invalid output type")
+            continue
+        for k in flag:
+            if k == "":
+                print("Invalid flag")
+                continue
+            else:
+                # From here we will do the proper string formatting.
+                # Here these are the column names below has been mentioned.
+                input_name = config["experiments"]["input_vars"][i]
+                output_name = config["experiments"]["output_vars"][j]
+                print(
+                    f"Creating the dataset for Input:{input_name}({i}) | Output: {output_name} ({j}) | Flag: {k}"
+                )
+                Final_Data = Final_Air_Quality_Dataset_pipeline(
+                    config=config,
+                    geospatial_encoder=geospatial_encoder,
+                    flag=k,
+                    input_type=i,
+                    output_type=j,
+                )
+                current_inputs, current_outputs = Final_Data.full_pipeline()
+
+                datasets[(i, j, k)] = {
+                    "inputs": current_inputs,
+                    "outputs": current_outputs,
+                }
+
+# Checking the datsets sizes.
+datasets[(1, 2, "Train")]["inputs"].shape
+datasets[(1, 2, "Train")]["outputs"].shape
+datasets[(1, 2, "Val")]["outputs"].shape
+datasets[(1, 1, "Val")]["outputs"].shape
+datasets[(1, 2, "Test")]["outputs"].shape
+datasets[(1, 1, "Test")]["outputs"].shape
+
+# After preparing the datasets we will train the different models.
+# In our case onc ewe are training the model we have inout keys and putput keys are different but the flag is same.
+from loss_functions import LossFunctions
+
+Loss = LossFunctions()
+from optimizer_utils import NPTrainer
+from optimizer_utils import neural_process_data
+from optimizer_utils import validation_function
+# importing the packages for the optimization.
 
 
+for input_key in input_type:
+    if input_key == "":
+        print("Please enter the input keys correctly")
+        continue
+    for output_key in output_type:
+        if output_key == "":
+            print("Please enter the output keys correctly")
+            continue
+        print(f" Start Training of Input: {input_key} | Output : {output_key}")
+        # the current inputs and current outputs are:
+        current_inputs = config["experiments"]["input_vars"][input_key]
+        in_name = "_".join(current_inputs)
+        current_outputs = config["experiments"]["output_vars"][output_key]
+        out_name = "_".join(current_outputs)
+        # We can calculate the dimensions of the inputs and putputs to decide the number of model's layers.
+
+        x_dim = len(current_inputs)
+        y_dim = len(current_outputs)
+        # In this model the inputs and outputs are.
+        model = NeuralProcess(x_dim, y_dim, x_dim, y_dim, 128, 128).to("cpu")
+        # Defining the current check points and log directories.
+        current_log_dir = f"./Master-Thesis/cpu_logs/{in_name}_{out_name}"
+        current_checkpoint_dir = f"./Master-Thesis/cpu_checkpoints/{in_name}_{out_name}"
+        # defining the optimizer
+        Optimizer = optim.Adam(
+            model.parameters, lr=float(config["Experiments"]["train"]["lr"])
+        )
+        # Defining the training class
+        Training = NPTrainer(
+            model=model,
+            optimizer=Optimizer,
+            loss_fn=Loss,
+            device="cpu",
+            log_dir=current_log_dir,
+            checkpoint_dir=current_checkpoint_dir,
+        )
+        # To check the model's accuracy in validation data set we will use this.
+        best_val_loss = float("inf")
+        # these are the training data sets
+        NeuralProcess_Train_datasets = {}
+        NeuralProcess_Train_datasets[(input_key, output_key)] = (
+            neural_process_data(datasets[(input_key, output_key, "Train")]["inputs"]),
+            neural_process_data(datasets[(input_key, output_key, "Train")]["outputs"]),
+        )
+        NeuralProcess_dataloaders = {}
+        NeuralProcess_dataloaders[(input_key, output_key)] = DataLoader(
+            NeuralProcess_Train_datasets[(input_key, output_key)],
+            batch_size=16,
+            shuffle=True,
+            num_workers=0,
+        )
+        # Now we will define the validation datasets as well as validation dataloasers
+        NeuralProcess_Val_datasets = {}
+        NeuralProcess_Val_datasets[(input_key, output_key)] = (
+            neural_process_data(datasets[(input_key, output_key, "Val")]["inputs"]),
+            neural_process_data(datasets[(input_key, output_key, "Val")]["outputs"]),
+        )
+        NeuralProcess_Val_dataloaders = {}
+        NeuralProcess_Val_dataloaders[(input_key, output_key)] = DataLoader(
+            NeuralProcess_Val_datasets[(input_key, output_key)],
+            batch_size=16,
+            shuffle=True,
+            num_workers=0,
+        )
+        for epoch in range(100):
+            # Train
+            train_loss = Training.train_epoch(
+                NeuralProcess_dataloaders[(input_key, output_key)], epoch
+            )
+            val_loss = validation_function(
+                model=model,
+                val_dataloader=NeuralProcess_Val_dataloaders[(input_key, output_key)],
+                loss=Loss,
+                device="cpu",
+            )
+            print(f"Epoch:{epoch} | Val_loss:{val_loss} | Train_loss:{train_loss}")
+            if val_loss < best_val_loss:
+                best_val_loss = val_loss
+                Training.save_checkpoint(epoch)
+                print(f" >>> Saved New Best Model found! ")
+# NeuraProcessData_latlon_PM25 = neural_process_data(
+#     fnal_data_latlong_PM25[0],
+#     fnal_data_latlong_PM25[1],
+#     nm_points_per_task=200,
+# )
 
 
+#     dataloader_latlon_PM25 = DataLoader(
+#     dataset=NeuralProcessData_latlon_PM25,
+#     batch_size=16,
+#     shuffle=True,
+#     num_workers=0,
+# )
 
 
+# ##################################################################
+# # -------------Training of Lat_Lon_PM25 data
+# ##################################################################
+# current_time = datetime.now().strftime("%Y%m%d-%H%M%S")
+# unique_log_dir = f"./logs/latlon_PM25/{current_time}"
+# unique_checkpoint_dir = f"./checkpoints/latlon_PM25/{current_time}"
+# Training = NPTrainer(
+#     model=model_latlon_PM25,
+#     optimizer=Optimizer_latlong_PM25,
+#     loss_fn=Loss,
+#     device="cpu",
+#     log_dir=unique_log_dir,
+#     checkpoint_dir=unique_checkpoint_dir,
+# )
+# #  running the epochs.
+# #  ... definitions above ...
+
+# #  Define a "best loss" to track improvement
+# best_val_loss = float("inf")
+# #
+# for epoch in range(100):  # Run for 100 epochs
+#     # 1. TRAIN
+#     train_loss = Training.train_epoch(dataloader_latlon_PM25, epoch)
+#     # 2. VALIDATE (Call the function we just wrote)
+#     val_loss = validation_function(
+#         model=model_latlon_PM25,  # Access model from your Trainer class
+#         val_dataloader=dataloader_val_latlon_PM25,  # You need a separate loader for val data
+#         loss_fn=Loss,
+#         device="cpu",
+#     )
+#     print(f"Epoch {epoch} | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}")
+#     # 3. SAVE ONLY IF BETTER
+#     if val_loss < best_val_loss:
+#         best_val_loss = val_loss
+#         Training.save_checkpoint(epoch)
+#         print(f"   >>> SAVED: New best model found!")
 
 
+from src.Models.neural_process import NeuralProcess
+
+"""
+Final models for training........... making attributes from the class
+"""
+
+model_latlon_AOD_PM25 = NeuralProcess(128, 2, 128, 2, 128, 128)
+model_latlon_AOD = NeuralProcess(127, 2, 127, 2, 128, 128)
+model_latlon_PM25 = NeuralProcess(127, 2, 127, 2, 128, 128)
+model_latlon = NeuralProcess(126, 2, 126, 2, 128, 128)
+
+Optimizer = optim.Adam(
+    model_latlon_AOD_PM25.parameters(), lr=float(config["train"]["lr"])
+)
+Optimizer_latlong_AOD = optim.Adam(
+    model_latlon_AOD.parameters(), lr=float(config["train"]["lr"])
+)
+Optimizer_latlong_PM25 = optim.Adam(
+    model_latlon_PM25.parameters(), lr=float(config["train"]["lr"])
+)
+Optimizer_latlong = optim.Adam(
+    model_latlon.parameters(), lr=float(config["train"]["lr"])
+)
 
 
+import torch.optim as optim
+from optimizer_utils import NPTrainer
+from loss_functions import LossFunctions
+
+Loss = LossFunctions()
+
+current_time = datetime.now().strftime("%Y%m%d-%H%M%S")
+# we store the logs to store the losses to plot for the tensorboard.
+unique_log_dir = f"./logs/latlon/{current_time}"
+unique_checkpoint_dir = f"./checkpoints/latlon/{current_time}"
+
+dataloader = DataLoader(
+    dataset=NeuralProcessData_latlon_AOD_PM25,
+    batch_size=16,
+    shuffle=True,
+    num_workers=0,
+)
+dataloader.dataset
+
+dataloader_latlon_AOD = DataLoader(
+    dataset=NeuralProcessData_latlon_AOD,
+    batch_size=16,
+    shuffle=True,
+    num_workers=0,
+)
+
+dataloader_latlon_PM25 = DataLoader(
+    dataset=NeuralProcessData_latlon_PM25,
+    batch_size=16,
+    shuffle=True,
+    num_workers=0,
+)
+NeuralProcessData_latlon_PM25
+dataloader_latlon = DataLoader(
+    dataset=NeuralProcessData_latlon,
+    batch_size=16,
+    shuffle=True,
+    num_workers=0,
+)
+""" Training also we will do in terms of looping to not to get confuse later due to 12 models training."""
 
 
+# H
 
 
+Training = NPTrainer(
+    model=model_latlon,
+    optimizer=Optimizer_latlong,
+    loss_fn=Loss,
+    device="cpu",
+    log_dir=unique_log_dir,
+    checkpoint_dir=unique_checkpoint_dir,
+)
+#  running the epochs.
+#  ... definitions above ...
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#  Define a "best loss" to track improvement
+best_val_loss = float("inf")
+#
+for epoch in range(10):  # Run for 100 epochs
+    # 1. TRAIN
+    train_loss = Training.train_epoch(dataloader_latlon, epoch)
+    # 2. VALIDATE (Call the function we just wrote)
+    val_loss = validation_function(
+        model=Training.model,  # Access model from your Trainer class
+        val_dataloader=dataloader_val_latlon,  # You need a separate loader for val data
+        loss_fn=Loss,
+        device="cpu",
+    )
+    print(f"Epoch {epoch} | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}")
+    # 3. SAVE ONLY IF BETTER
+    if val_loss < best_val_loss:
+        best_val_loss = val_loss
+        Training.save_checkpoint(epoch)
+        print(f"   >>> SAVED: New best model found!")
 
 
 """   For type 1 target_columns = ['AOD', 'PM2.5'] & Training dataset      """
@@ -103,7 +370,12 @@ flag = ["Train", "Val", "Test"]
 #                       Training data
 
 Final_Data_Train_latlong_AOD_PM25 = Final_Air_Quality_Dataset_pipeline(
-    config=config, geospatial_encoder =geospatial_encoder ,flag="Train", input_type=1, output_type=1)
+    config=config,
+    geospatial_encoder=geospatial_encoder,
+    flag="Train",
+    input_type=1,
+    output_type=1,
+)
 
 
 Final_Data_Train_latlong_AOD_PM25 = Final_Data_Train_latlong_AOD_PM25.full_pipeline()
@@ -343,37 +615,7 @@ Final_Data_Test_latlong = Final_Data_Test_latlong.full_pipeline()
 Final_Data_Test_latlong[0].shape
 
 
-
-
-
-
-
-
-
-
-
-# we will lets down the final data sets 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# we will lets down the final data sets
 
 
 #                       Validation data
@@ -993,6 +1235,7 @@ for epoch in range(10):  # Run for 100 epochs
 # Training on lat_lon data set
 ##################################################################
 current_time = datetime.now().strftime("%Y%m%d-%H%M%S")
+# we store the logs to store the losses to plot for the tensorboard.
 unique_log_dir = f"./logs/latlon/{current_time}"
 unique_checkpoint_dir = f"./checkpoints/latlon/{current_time}"
 Training = NPTrainer(
