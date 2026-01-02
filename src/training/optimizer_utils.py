@@ -184,6 +184,7 @@ class NPTrainer:
 
 # we will create the validation function for the validation data set.
 
+
 def validation_function(model, val_dataloader, loss_fn, device):
     model.eval()
     running_loss = 0.0
@@ -214,7 +215,8 @@ def validation_function(model, val_dataloader, loss_fn, device):
 # here ww will build the class for the best model selectioin in validation dataset.
 import glob
 
-# We 
+
+# We
 class Trained_model_selection_in_val_data_set:
     def __init__(self, model, val_dataloader, device, Loss):
         # here model will be a class of model wiith the input arguments.
@@ -282,5 +284,3 @@ class Trained_model_selection_in_val_data_set:
 
             best_loss, best_model = All_check_point_loss[0]
         return best_model
-
-
