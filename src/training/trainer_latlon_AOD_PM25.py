@@ -37,6 +37,10 @@ from Dataloader.Modis_Data_loader.PM25_data_loader_analysis import (
 )
 from locationencoder.final_location_encoder import Geospatial_Encoder
 
+
+# Defining the geospatial encoder outside of the argument as it should not coming again and again. 
+
+
 geospatial_encoder = Geospatial_Encoder(
     config["Geo_spatial_Encoder"]["dim_in"],
     config["Geo_spatial_Encoder"]["dim_hidden"],
@@ -46,6 +50,18 @@ geospatial_encoder = Geospatial_Encoder(
 from Dataloader.Modis_Data_loader.torch_data_loader import Airqualitydataset
 from Dataloader.Modis_Data_loader.final_loader import Final_Air_Quality_Dataset_pipeline
 from src.Models.neural_process import NeuralProcess
+from loss_functions import LossFunctions
+
+Loss = LossFunctions()
+from optimizer_utils import NPTrainer
+from optimizer_utils import neural_process_data
+from optimizer_utils import validation_function
+
+# importing the packages for the optimization.
+from Dataloader.Modis_Data_loader.torch_data_loader import Airqualitydataset
+from Dataloader.Modis_Data_loader.final_loader import Final_Air_Quality_Dataset_pipeline
+from src.Models.neural_process import NeuralProcess
+
 from loss_functions import LossFunctions
 
 Loss = LossFunctions()
@@ -82,7 +98,10 @@ input_type = [1, 2, 3, 4]
 output_type = [1, 2, 3]
 flag = ["Train", "Val", "Test"]
 
+
+""" Data set loop creating """
 # Now we will loop over all the combinations to create the final datasets.
+
 datasets = {}
 for i in input_type:
     if i == "":
@@ -119,7 +138,12 @@ for i in input_type:
                 }
 
 # Checking the datsets sizes.
+
+# datasets[(input_types, output_type, flag)]
+
 datasets[(1, 2, "Train")]["inputs"].shape
+datasets[(1, 2, "Val")]["inputs"].shape
+datasets[(1, 2, "Test")]["inputs"].shape
 datasets[(1, 2, "Train")]["outputs"].shape
 datasets[(1, 2, "Val")]["outputs"].shape
 datasets[(1, 1, "Val")]["outputs"].shape
@@ -130,17 +154,6 @@ datasets[(1, 1, "Train")]["outputs"].shape
 
 # After preparing the datasets we will train the different models.
 # In our case onc ewe are training the model we have inout keys and putput keys are different but the flag is same.
-from loss_functions import LossFunctions
-
-Loss = LossFunctions()
-from optimizer_utils import NPTrainer
-from optimizer_utils import neural_process_data
-from optimizer_utils import validation_function
-
-# importing the packages for the optimization.
-from Dataloader.Modis_Data_loader.torch_data_loader import Airqualitydataset
-from Dataloader.Modis_Data_loader.final_loader import Final_Air_Quality_Dataset_pipeline
-from src.Models.neural_process import NeuralProcess
 
 len(config["experiments"]["input_vars"][1])
 len(config["experiments"]["output_vars"][1])
@@ -148,6 +161,10 @@ len(config["experiments"]["output_vars"][1])
 float(config["train"]["lr"])
 len(datasets[(1, 1, "Train")]["inputs"][0])
 len(datasets[(1, 1, "Train")]["outputs"][0])
+
+
+""" Training loop generation """
+
 
 for input_key in input_type:
     if input_key == "":
@@ -233,6 +250,33 @@ for input_key in input_type:
                 best_val_loss = val_loss
                 Training.save_checkpoint(epoch)
                 print(f" >>> Saved New Best Model found! ")
+
+
+
+
+
+
+
+""" The above code is the optimized version of the code used in first trial. """
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # NeuraProcessData_latlon_PM25 = neural_process_data(
 #     fnal_data_latlong_PM25[0],

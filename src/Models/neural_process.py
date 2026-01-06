@@ -70,6 +70,16 @@ class NeuralProcess(nn.Module):
         # mu_zct, log_var_zct --> posterier z distribution
         return (mu_y, var_y, mu_zc, log_var_zc, mu_zct, log_var_zct)
 
+    def predict(self, x_context, y_context, x_target):
+        rc = self.encoder(x_context, y_context)
+        mu, logvar = self.latent_encoder(rc)
+        std = torch.exp(0.5 * logvar)
+        eps = torch.randn_like(std)
+        z = mu + eps * std
+        mu_yt, var_yt = self.decoder(x_target, z)
+        # target samples.
+        return (mu_yt, var_yt)
+
 
 # Returning mu and log_var for the KL divergence calculation
 # in this file mu_y, var_y are the reconstructed y values with uncertainty. To construct the loss function
