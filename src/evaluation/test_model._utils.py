@@ -56,6 +56,18 @@ class NP_Evaluator:
             print(
                 f" No better weights found in the check point directory and no {latest_file}"
             )
+        # Once the file with high weights have been found we will load them
+
+        self.model.load_state_dict(latest_file, map_location=self.device)
+
+    def calculate_negative_log_liklihood(self, y_t, mu_y_pred, var_y_pred):
+        """
+        Liklihood = (1/sqrt(2*pi*var) * e^(y_t - mu_y_pred)^2/2 * var_y_pred^2)
+        after taking log both side
+
+        NLL = 0.5 * log(vary_pred) + (y_t - mu_y)^2/var_y_pred + 0.5*log(2*pi)
+
+        """
 
         # Now once we found the file of the best weights we will load them.
 
