@@ -10,6 +10,7 @@ from torch.utils.data import DataLoader
 from sklearn.metrics import mean_squared_error, r2_score
 from tqdm import tqdm
 import torch.nn.functional as F
+from pathlib import Path
 
 # os.path.dirname(__file__) >> Current file path we go one step above and then add the absolute path in the sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -23,14 +24,116 @@ from Dataloader.Modis_Data_loader.final_loader import Final_Air_Quality_Dataset_
 from src.Models.neural_process import NeuralProcess
 from training.optimizer_utils import neural_process_data, context_target_split
 
+# Check the functions.
 
+
+ROOT = Path(__file__).resolve().parents[2]
+ROOT
 # Evaluator class
-check_point_dir = "/Users/pavankumar/Documents/Winter_Thesis/Coding_Learning/Master-Thesis/cpu_checkpoints/latitude_longitude____AOD/20260102-235714"
+check_point_dir = ROOT / "cpu_checkpoints" / "{model_name}" / "{time_stamp}"
 
 files = glob.glob(os.path.join(check_point_dir, "*.pth"))
 files
 latest_file = max(files, key=lambda f: int(f.split("_")[-1].split(".")[0]))
 latest_file
+
+
+from tqdm import tqdm
+from pathlib import Path
+
+# Need to access context_target_split from your existing optimizer utils
+# Make sure optimizer_utils is in the python path or adjust import
+from optimizer_utils import context_target_split
+
+# Setup ROOT for default plot directory
+ROOT = Path(__file__).resolve().parents[2]
+
+
+# from the below code we will visualize our predicted points.
+
+
+def visualize_sample(
+    xc,
+    yc,
+    xt,
+    yt,
+    mu_yt,
+    var_yt,
+    output_cols,
+    experiment_name,
+    sample_idx=0,
+    save_dir="./plots",
+):
+    """
+    Plots Context (Blue), Target (Red), Prediction Mean (Green Line), and Uncertainty (Green Shaded).
+    """
+    os.makedirs(save_dir, exist_ok=True)
+
+    # Move to CPU/Numpy for plotting
+    yc_np = yc[sample_idx].cpu().detach().numpy()
+    yt_np = yt[sample_idx].cpu().detach().numpy()
+    mu_np = mu_yt[sample_idx].cpu().detach().numpy()
+    std_np = torch.sqrt(var_yt[sample_idx]).cpu().detach().numpy()
+
+    num_outputs = yc_np.shape[-1]
+    num_context = yc_np.shape[0]
+    num_target = yt_np.shape[0]
+
+    x_idx_context = np.arange(0, num_context)
+    x_idx_target = np.arange(num_context, num_context + num_target)
+
+    for dim_idx in range(num_outputs):
+        var_name = output_cols[dim_idx]
+        plt.figure(figsize=(10, 6))
+
+        # plotting the context points
+        plt.scatter(
+            x_idx_context,
+            yc_np[:, dim_idx],
+            color="blue",
+            label="Context (Input)",
+            s=50,
+            alpha=0.6,
+        )
+        # known target points vsualization.
+        plt.scatter(
+            x_idx_target,
+            yt_np[:, dim_idx],
+            color="red",
+            marker="x",
+            label="Target (Truth)",
+            s=60,
+        )
+        # Predicted points visualization.
+        plt.plot(
+            x_idx_target,
+            mu_np[:, dim_idx],
+            color="green",
+            label="Prediction (Mean)",
+            linewidth=2,
+        )
+        # # Lower and Upper boutnds for the uncertainty,
+        # after 2 standerd deviations.
+        lower = mu_np[:, dim_idx] - 2 * std_np[:, dim_idx]
+        upper = mu_np[:, dim_idx] + 2 * std_np[:, dim_idx]
+        plt.fill_between(
+            x_idx_target,
+            lower,
+            upper,
+            color="green",
+            alpha=0.2,
+            label="Uncertainty (95% CI)",
+        )
+
+        plt.title(f"{experiment_name}\nVariable: {var_name}")
+        plt.xlabel("Sample Index")
+        plt.ylabel("Value")
+        plt.legend()
+        plt.grid(True, alpha=0.3)
+
+        save_path = f"{save_dir}/{experiment_name}_var_{var_name}.png"
+        plt.savefig(save_path)
+        plt.close()
 
 
 class NP_Evaluator:
@@ -56,7 +159,7 @@ class NP_Evaluator:
             print(
                 f" No better weights found in the check point directory and no {latest_file}"
             )
-        # Once the file with high weights have been found we will load them
+        # Once the file with high weights have been found we will load them to the selected model.
 
         self.model.load_state_dict(latest_file, map_location=self.device)
 
@@ -71,4 +174,23 @@ class NP_Evaluator:
 
         # Now once we found the file of the best weights we will load them.
 
-        pass
+        NLL = 0.5 * (
+            (torch.log(2 * torch.pi * var_y_pred))
+            + ((y_t - mu_y_pred) ** 2 / var_y_pred)
+        )
+        return NLL
+
+    def run_eval(self, dataloader, output_cols, exp_name, plots_to_make=2):
+        all_true = []
+        all_mu = []
+        plots_done = 0
+        plot_dir = ROOT / "final_plots"
+
+        with torch.nograd():
+            for x_batch, y_batch in tqdm(dataloader, desc="Eval"):
+                x_batch = x_batch.to(self.device)
+                y_batch = y_batch.to(self.device)
+
+                xc, yc, xt, yt = context_target_split(
+                    x_batch, y_batch, min_context=50, max_context=100, num_target=200
+                )
