@@ -2,14 +2,17 @@ import pandas as pd
 import os
 import numpy as np
 from scipy.spatial import cKDTree
+from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[2]
+
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, ROOT)
 
 
 class Modis_data_loader:
-    def __init__(
-        self,
-        file_name,
-        folder_root_dir="/Users/pavankumar/Documents/Winter_Thesis/Coding_Learning/Master-Thesis/src/data/data_files",
-    ):
+    def __init__(self, file_name, folder_root_dir=None):
         """
         Initialize the DataLoaderAnalysis with a file name and root directory.
 
@@ -22,12 +25,16 @@ class Modis_data_loader:
             FileNotFoundError: If the file does not exist.
             Exception: For other file reading errors.
         """
+
+        if folder_root_dir is None:
+            folder_root_dir = ROOT / "src" / "data" / "data_files"
+
         if not isinstance(file_name, str) or not file_name:
             raise ValueError("file_name must be a non-empty string")
 
         self.folder_root_dir = folder_root_dir
         self.file_name = file_name
-        self.full_path = os.path.join(folder_root_dir, file_name)
+        self.full_path = self.folder_root_dir / file_name
 
         try:
             self.data = pd.read_csv(self.full_path)  # Modify if not CSV
@@ -91,10 +98,11 @@ As this file is a .npy file with 3D data hence we need to build a dataloader tha
 
 class PM_25_dataloader:
     def __init__(
-        self,
-        filename="PM_2.5_Data/3_hr_data_Sept_2023_v1.npy",
-        folder_root_dir="/Users/pavankumar/Documents/Winter_Thesis/Coding_Learning/Master-Thesis/src/data/data_files",
+        self, filename="PM_2.5_Data/3_hr_data_Sept_2023_v1.npy", folder_root_dir=None
     ):
+        if folder_root_dir is None:
+            folder_root_dir = ROOT / "src" / "data" / "data_files"
+
         self.filename = filename
         self.folder_root_dir = folder_root_dir
         self.full_path = os.path.join(self.folder_root_dir, self.filename)

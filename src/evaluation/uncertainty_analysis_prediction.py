@@ -4,8 +4,11 @@ import sys
 from pathlib import Path
 import torch
 import glob
+import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 from sklearn.metrics import mean_squared_error, r2_score
+import numpy as np
+import pandas as pd
 
 # Set-up path
 
@@ -53,7 +56,7 @@ def Neural_process_run_evaluation():
         # Here we will construct the experiment name.
         for j in output_type:
             in_columns = config["experiments"]["input_vars"][i]
-            out_columns = config["experiments"]["input_vars"][j]
+            out_columns = config["experiments"]["output_vars"][j]
             exp_name = f"{'_'.join(in_columns)}____{'_'.join(out_columns)}"
 
             # Find the base directory
@@ -119,9 +122,57 @@ def Neural_process_run_evaluation():
             dl = DataLoader(ds, batch_size=20, shuffle=False)
 
             x_dim, y_dim = train_x.shape[-1], train_y.shape[-1]
+            model = NeuralProcess(x_dim, y_dim, x_dim, y_dim, 128, 128)
+
+            evaluator = NP_Evaluator(model, device)
+
+            try:
+                # Load weights in the model.
+                print(f"Loading the checkpoints {best_checkpoint}")
+                evaluator.load_best_checkpoints(best_checkpoint)
+
+            except Exception as e:
+                print(f"Model load error {e}")
+                continue
 
             # Here we will define the model.
 
-            print(f" >>>> Loading checkpoint: {os.path.basename(best_checkpoint)}")
+            y_true, mu_y, y_nll = evaluator.run_eval(dl, out_columns, exp_name)
 
-            evaluator = NP_Evaluator(model, device)
+            # MEtric and saving
+
+            for idx, var_name in enumerate(out_columns):
+                flat_t = y_true[:, :, idx].flatten()
+                flat_p = mu_y[:, :, idx].flatten()
+
+                # NLL is already averaged per sample in run_eval, so we take mean of all samples
+                nll_mean = np.mean(y_nll)
+
+                rmse = np.sqrt(mean_squared_error(flat_t, flat_p))
+                r2 = r2_score(flat_t, flat_p)
+                print(
+                    f" -> {var_name} | RMSE : {rmse:.4f} |R2 {r2:.4f} | NLL: {nll_mean: .4f} "
+                )
+
+                results.append(
+                    {
+                        "Experiment ": exp_name,
+                        "Variable  ": var_name,
+                        "RMSE": rmse,
+                        "R2": r2,
+                        "NLL": nll_mean,
+                    }
+                )
+    if results:
+        results_dir = ROOT / "final_results"
+        csv_path = results_dir / "final_results_summery.csv"
+        # make a new directory or replace it with the existing one.
+        os.makedirs(results_dir, exist_ok=True)
+        # Save the file
+        pd.DataFrame(results).to_csv(csv_path, index=False)
+        print(f"The directory has been created {results_dir}")
+        print(f"Saved final results in {csv_path}")
+
+
+if __name__ == "__main__":
+    Neural_process_run_evaluation()

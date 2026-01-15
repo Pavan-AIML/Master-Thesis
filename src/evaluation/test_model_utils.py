@@ -62,7 +62,7 @@ def visualize_sample(
     output_cols,
     experiment_name,
     sample_idx=0,
-    save_dir="./plots",
+    save_dir=".plots",
 ):
     """
     Plots Context (Blue), Target (Red), Prediction Mean (Green Line), and Uncertainty (Green Shaded).
@@ -180,7 +180,7 @@ class NP_Evaluator:
         plots_done = 0
         plot_dir = ROOT / "final_plots"
 
-        with torch.nograd():
+        with torch.no_grad():
             for x_batch, y_batch in tqdm(dataloader, desc="Eval"):
                 x_batch = x_batch.to(self.device)
                 y_batch = y_batch.to(self.device)
@@ -212,9 +212,9 @@ class NP_Evaluator:
 
                 all_mu.append(mu_yt.cpu().numpy())
                 all_true.append(yt.cpu().numpy())
-                all_nll.append(nll_score_elementwise.cpu.numpy())
+                all_nll.append(nll_score_elementwise.cpu().numpy())
         return (
             np.concatenate(all_true, axis=0),
             np.concatenate(all_mu, axis=0),
-            np.concatenate(all_nll, axis=0)
+            np.concatenate(all_nll, axis=0),
         )
