@@ -90,5 +90,50 @@ Final_training_data = Training_data_instance.get_final_training_data(
 
 Final_training_data.head(), Final_training_data.shape, type(Final_training_data)
 
+import sys
+from pathlib import Path
+import glob
+
+ROOT = Path(__file__).resolve().parents[1]
+print(ROOT)
 
 # here we will check our data_loader individually
+
+
+def finding_the_best_model_checkpoint(best_experiment_folder_path):
+    # First of all we will go and look for the best experiment folder path.
+    best_experiment_path = ROOT / "cpu_checkpoints" / best_experiment_folder_path
+
+    if not os.path.exists(best_experiment_path):
+        raise FileExistsError(
+            f"Best experiment folder path not found:{best_experiment_path}"
+        )
+
+    # Now we will go and look for the latest time stamp as we have saved our latest directory in it
+
+    time_stamp_folder = glob.glob(os.path.join(best_experiment_path, "*"))
+
+    if not time_stamp_folder:
+        raise FileExistsError(
+            f"No time stamp folder found in the {best_experiment_path}"
+        )
+    latest_time_stamp_folder = max(time_stamp_folder, key=os.path.getmtime)
+
+    # Now once we have found the latest time stamp foder we will look inside and find the best model checkpoint.
+
+    best_check_point_dirs = glob.glob(os.path.join(latest_time_stamp_folder, "*.pth"))
+    if not best_check_point_dirs:
+        raise FileExistsError(f"No check-point file found {best_check_point_dirs}")
+
+    # Now as we have found the best check-points we will return the check-point with highest number of epoch.
+    
+    # to find the best check point we will use the lambda function. 
+    # Here the logic of the lambda function comes from to check the check-point file in the order of the number written in the check point file name.
+    
+    best_check_point_file = max(best_check_point_dirs, key = lambda f : int(f.split("_")[-1].split(".")[0]))
+    
+
+    return best_check_point_file
+
+
+finding_the_best_model_checkpoint("latitude_longitude_AOD_PM2.5____AOD_PM2.5")
