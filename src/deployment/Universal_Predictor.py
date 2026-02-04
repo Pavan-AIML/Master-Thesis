@@ -132,8 +132,6 @@ class Universal_Predictor:
 
 
 # Max check point file
-
 # import torchvision
-
 # mu = torch.tensor([[[1.0, 2.0]]])
 # mu[0, 0, 0]
