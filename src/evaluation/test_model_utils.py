@@ -26,8 +26,6 @@ from src.Models.neural_process import NeuralProcess
 from training.optimizer_utils import neural_process_data, context_target_split
 
 # Check the functions.
-
-
 # ROOT = Path(__file__).resolve().parents[2]
 # ROOT
 # # Evaluator class
@@ -97,13 +95,12 @@ def visualize_sample(
             alpha=0.6,
         )
         # known target points vsualization.
-        plt.scatter(
+        plt.plot(
             x_idx_target,
             yt_np[:, dim_idx],
             color="red",
-            marker="x",
             label="Target (Truth)",
-            s=60,
+            linewidth=2,
         )
         # Predicted points visualization.
         plt.plot(
@@ -132,7 +129,8 @@ def visualize_sample(
         plt.legend()
         plt.grid(True, alpha=0.3)
 
-        save_path = f"{save_dir}/{experiment_name}_var_{var_name}.png"
+        file_name = f"{experiment_name}_var_{var_name}.png"
+        save_path = Path(save_dir) / file_name
         plt.savefig(save_path)
         plt.close()
 
@@ -173,13 +171,13 @@ class NP_Evaluator:
         )
         return NLL
 
-    def run_eval(self, dataloader, output_cols, exp_name, plots_to_make=2):
+    def run_eval(self, dataloader, output_cols, plot_dir, exp_name, plots_to_make=2):
         # Here we are considering to make 2 plots only as we will plot the graph for 2 batches only.
+
         all_true = []
         all_mu = []
         all_nll = []
         plots_done = 0
-        plot_dir = ROOT / "final_plots"
 
         with torch.no_grad():
             for x_batch, y_batch in tqdm(dataloader, desc="Eval"):

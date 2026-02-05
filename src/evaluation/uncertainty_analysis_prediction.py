@@ -9,12 +9,12 @@ from torch.utils.data import DataLoader
 from sklearn.metrics import mean_squared_error, r2_score
 import numpy as np
 import pandas as pd
+from datetime import datetime
 
+current_time = datetime.now().strftime("%Y%m%d-%H%M%S")
 # Set-up path
-
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
-
 # Local packages imports.
 from configs.utils import config
 from locationencoder.final_location_encoder import Geospatial_Encoder
@@ -48,6 +48,8 @@ def Neural_process_run_evaluation():
     )
     # I have stired the results here
     results = []
+    plot_dir = ROOT / "final_plots" / current_time
+    os.makedirs(plot_dir, exist_ok=True)
 
     input_type = [1, 2, 3, 4]
     output_type = [1, 2, 3]
@@ -137,7 +139,9 @@ def Neural_process_run_evaluation():
 
             # Here we will define the model.
 
-            y_true, mu_y, y_nll = evaluator.run_eval(dl, out_columns, exp_name)
+            y_true, mu_y, y_nll = evaluator.run_eval(
+                dl, out_columns, plot_dir, exp_name
+            )
 
             # MEtric and saving
 
@@ -164,7 +168,7 @@ def Neural_process_run_evaluation():
                     }
                 )
     if results:
-        results_dir = ROOT / "final_results"
+        results_dir = ROOT / "final_results" / current_time
         csv_path = results_dir / "final_results_summery.csv"
         # make a new directory or replace it with the existing one.
         os.makedirs(results_dir, exist_ok=True)
