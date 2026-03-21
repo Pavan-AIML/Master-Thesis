@@ -1,96 +1,131 @@
-<h1 align="center">🎓 Master's Thesis</h1>
+# Master's Thesis Repository
 
-<h3 align = "center"> Deep learning focused </h3>
+## Neural Process Models for Spatio-Temporal Reconstruction of AOD and PM2.5
 
+This repository presents the computational framework developed for a Master's thesis on probabilistic deep learning for air-quality reconstruction. The study focuses on Neural Process (NP) models to recover the spatio-temporal structure of Aerosol Optical Depth (AOD) and PM2.5 under sparse and heterogeneous observations, while explicitly modeling predictive uncertainty.
 
-<h4 align="center"> Topic:  Neural Process Models for Spatio-Temporal Reconstruction of Aerosol Optical Depth and PM₂.₅ 🌎 </h4>
+The implementation covers the full experimental lifecycle: data preparation, geospatial encoding, model training, checkpointing, quantitative evaluation, and figure generation.
 
-<h3 align="center"> Followed steps in "main branch" </h3>
+## Final Results (Selected Figures)
 
+The following figures correspond to the final evaluation run and represent the principal visual results reported in this repository.
 
-## Before Production (Research & Development Phase)
+### Final AOD Result
 
-This stage focuses on data understanding, model design, experimentation, and validation.
+![Final AOD Result](final_plots/Eval_Run_11-03-2026_21-11/latitude_longitude_AOD_idw_PM2.5_idw____AOD_PM2.5_var_AOD.png)
 
-Problem Definition & Data Understanding
+*Figure 1. Final model output for AOD in the joint AOD-PM2.5 configuration (`latitude_longitude_AOD_idw_PM2.5_idw -> AOD_PM2.5`).*
 
-Define the goal: reconstruct spatial–temporal patterns of AOD and PM₂.₅.
+### Final PM2.5 Result
 
-Explore satellite-based and ground-based air quality datasets.
+![Final PM2.5 Result](final_plots/Eval_Run_11-03-2026_21-11/latitude_longitude_AOD_idw_PM2.5_idw____AOD_PM2.5_var_PM2.5.png)
 
-Identify missing data patterns and temporal gaps.
+*Figure 2. Final model output for PM2.5 in the same joint configuration (`latitude_longitude_AOD_idw_PM2.5_idw -> AOD_PM2.5`).*
 
-Data Preprocessing & Analysis
+## Research Objectives
 
-Handle missing values, normalization, and scaling.
+The thesis is structured around four research objectives:
+- reconstruct AOD and PM2.5 as spatially and temporally coherent fields;
+- assess predictive performance across multiple feature configurations;
+- evaluate uncertainty quality through likelihood and coverage diagnostics;
+- ensure reproducibility of the complete computational pipeline.
 
-Conduct exploratory analysis in Dataloader/PM2.5_data_loader_analysis.py.
+## Repository Structure
 
-Spatially align AOD and PM₂.₅ readings using geolocation metadata.
+- `configs/`: experiment and preprocessing configuration files.
+- `Dataloader/`: data ingestion, harmonization, and dataset pipeline logic.
+- `locationencoder/`: geospatial encoder implementation.
+- `src/Models/`: Neural Process modules (encoder, latent encoder, decoder, robust variants).
+- `src/training/`: objective functions, training utilities, and training scripts.
+- `src/evaluation/`: evaluation routines, metrics export, and plotting.
+- `Gpu_checkpoints_tum/`: trained model checkpoints (GPU runs).
+- `GPU_final_results/`: tabular summaries of final evaluation metrics.
+- `final_plots/`: generated figures from evaluation runs.
+- `tests/`: unit and integration testing code.
+- `docker/`: containerization files for environment reproducibility.
 
-## Data Loader Development
+## Methodological Summary
 
-Implement a PyTorch-compatible loader (torch_data_loader.py) for efficient batching.
+### Data and Feature Engineering
 
-Integrate spatio-temporal sampling strategies for model input consistency.
+The data pipeline integrates air-quality and geospatial variables into model-ready tensors. Experiments are configured for multiple input-output combinations, including coordinate-only, AOD-only, PM2.5-only, and joint feature sets.
 
-Spatial Encoding / Positional Embedding
+### Geospatial Encoding
 
-Incorporate spatial coordinates into an embedding space using positional encodings.
+Latitude-longitude coordinates are transformed through a dedicated spatial encoder, allowing the NP model to learn location-aware representations beyond raw coordinate values.
 
-Encode latitude–longitude relations to preserve spatial structure in the neural process model.
+### Neural Process Formulation
 
-## Model Architecture Development
+The model architecture follows a standard NP design:
+- a context encoder maps observed pairs to latent representations;
+- a latent encoder parameterizes prior/posterior distributions;
+- a decoder produces predictive means and uncertainties at target locations.
 
-Design the Neural Process (NP) architecture inside src/model/.
+### Training Objective
 
-Experiment with conditional neural processes (CNPs), attentive NPs, or GNPs for spatio-temporal interpolation.
+Optimization is performed through an ELBO-inspired objective with:
+- reconstruction term based on negative log-likelihood (NLL);
+- KL regularization between posterior and prior latent distributions.
 
-Define the encoder–decoder structure and latent variable formulation.
+### Evaluation Protocol
 
-## Model Training
+Model quality is assessed on held-out splits using:
+- RMSE;
+- R2;
+- NLL;
+- empirical coverage statistics.
 
-Train the model with various loss functions (NLL, KL divergence for variational components).
+Evaluation artifacts are written to run-specific folders in `final_plots/` and `GPU_final_results/`.
 
-Use GPU-accelerated training with early stopping and checkpointing.
+## Installation
 
-## Model Evaluation
+```bash
+git clone <repository-url>
+cd Master-Thesis
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
 
-Validate performance using RMSE, and spatial–temporal consistency metrics.
+## Running the Pipeline
 
+### Training
 
-Unit Testing
+```bash
+python src/training/trainer_latlon_AOD_PM25.py
+```
 
-Perform functional and integration testing with Pytest to ensure code reliability.
+Training outputs are saved under timestamped directories (for example, in `Gpu_checkpoints_tum/` and `logs_20km/`).
 
-## After Production (Deployment & Operational Phase)
+### Evaluation
 
-This stage ensures reproducibility, scalability, and model serving in real environments.
+```bash
+python src/evaluation/uncertainty_analysis_prediction.py
+```
 
-Dockerization
+This script generates:
+- figures in `final_plots/`;
+- metric tables in `GPU_final_results/`.
 
-Create a Dockerfile containing the environment (Python, PyTorch, dependencies).
+## Reproducibility
 
-Ensure portability across systems (local GPU → cloud instance).
+- Random seeds are fixed in key scripts to reduce run-to-run variability.
+- Run folders are timestamped for traceable experiment history.
+- Naming conventions encode input-output experiment settings.
+- Core options are centralized in `configs/`.
 
-Model Serving / API Deployment
+## Testing
 
-Package the trained model into a RESTful API (Fast API).
+```bash
+pytest -q
+```
 
-Containerize and deploy on a cloud platform or server environment.
+Some research scripts may require local configuration and data-path adjustments before execution in a new environment.
 
-Integrate monitoring for inference latency and data drift.
+## Citation
 
-Continuous Integration / Continuous Deployment (CI/CD)
+If this repository is used in academic work, please cite the associated Master's thesis and acknowledge this implementation.
 
-Automate testing and deployment using GitHub Actions or similar pipelines.
+## License
 
-Maintain version control for model updates and retraining.
-
-Post-Deployment Monitoring
-
-Track prediction quality, data distribution changes, and model drift.
-
-Schedule retraining with new data periodically to maintain accuracy.
-
-
+This project is released under the terms described in `LICENSE`.
