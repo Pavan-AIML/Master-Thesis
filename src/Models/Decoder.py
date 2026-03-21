@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
-import torch.functional as F
+import torch.nn.functional as F
+from  torch.distributions import Independent
+from torch.distributions import Normal
 
 """
 In this module the input will be target values of x & z values and output values will be the reconstructed y values with uncertainty so here we will not get deterministic values of y but it's distirbution mu and variance.
@@ -8,35 +10,44 @@ In this module the input will be target values of x & z values and output values
 
 
 class Decoder(nn.Module):
+    """Predicts target y given target x and sampled latent z."""
     def __init__(self, x_target_dim, z_dim, hidden_dim, y_target_dim):
         super().__init__()
-        self.x_target_dim = x_target_dim
-        self.z_dim = z_dim
-        self.hidden_dim = hidden_dim
-        self.y_target_dim = y_target_dim
         self.net = nn.Sequential(
-            nn.Linear(self.x_target_dim + self.z_dim, self.hidden_dim),
+            nn.Linear(x_target_dim + z_dim, hidden_dim),
             nn.ReLU(),
-            nn.Linear(self.hidden_dim, self.hidden_dim),
+            nn.Linear(hidden_dim, hidden_dim),
             nn.ReLU(),
-            nn.Linear(
-                self.hidden_dim, self.y_target_dim * 2
-            ),  # Outputting both mean and log variance
+            nn.Linear(hidden_dim, y_target_dim * 2), # Output mu and log_var
         )
+        self.y_target_dim = y_target_dim
 
     def forward(self, x_target, z):
-        z = z.unsqueeze(1)
-        z = z.expand(-1, x_target.size(1), -1)
-        # Expanding z to match x_target's shape
-        combined_input = torch.cat([x_target, z], dim=-1)
-        output = self.net(combined_input)
-        mu, log_var = output.chunk(2, dim=-1)  # Splitting into mean and log variance
-        # clamp the log variance with the values between (-10 ,10)
-        log_var = torch.clamp(log_var, -10, 10)
-        var = torch.exp(log_var)  # Ensuring variance is positive
-        # vector of length of y_target and y_input dims
-        # Here mu is the mean of reconstructed y values and var is the variance of reconstructed y values. and both are the size of y output dimension as in our case bith will be dimension of 2.
-        return mu, var
+        # Expand z to match the number of target points: [B, 1, z_dim] -> [B, N_target, z_dim]
+        B, N_t , _ = x_target.shape
+
+        z = z.unsqueeze(1).expand(-1, N_t, -1)
+
+        combined = torch.cat([x_target, z], dim=-1)
+        h = self.net(combined.view(B*N_t, -1)).view(B, N_t, 2 * self.y_target_dim)
+
+        mu, log_sigma = torch.chunk(h, 2, dim=-1)
+        
+
+
+       
+
+        
+        # Stability: Ensure variance is positive and doesn't collapse to zero
+        # 0.1 is a minimum noise floor to prevent infinite likelihood
+        " This will ensure the stability of the trainin of the tenworks so that the gradients are not dead."
+
+        "Here the main reason of using the soft plus is that the noise should also be cpatured and noise can go beyond the range of 0 to 1. Hene not sigmoide."
+        sigma = 0.1 + 0.9 * F.softplus(log_sigma)
+        dist = Normal(loc = mu, scale = sigma)
+        base = Normal(loc= mu, scale = sigma)
+        dost = Independent(base, 1)
+        return dist, mu, sigma
 
 
 """

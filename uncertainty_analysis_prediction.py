@@ -131,7 +131,7 @@ def Neural_process_run_evaluation():
             try:
                 # Load weights in the model.
                 print(f"Loading the checkpoints {best_checkpoint}")
-                evaluator.load_best_checkpoints(best_checkpoint)
+                evaluator.load_best_checkpoints(best_checkpoint['model_state_dict'])
 
             except Exception as e:
                 print(f"Model load error {e}")

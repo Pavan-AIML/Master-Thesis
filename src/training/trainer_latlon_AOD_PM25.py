@@ -15,15 +15,39 @@ from tqdm import tqdm
 import arrow
 from datetime import datetime
 from torch import optim
-
+# from loss_functions import NPELBO
+from datetime import datetime
+global_run_id = datetime.now().strftime("%Y%m%d-%H%M%S")
 # from utils.config import config
 from torch.utils.data import DataLoader
 
 ROOT = Path(__file__).resolve().parents[2]  # tests/ -> project root
 sys.path.insert(0, str(ROOT))
 print(ROOT)
+from src.training.optimizer_utils import NPTrainer, neural_process_data
+from src.training.loss_functions import NPELBO
+
+device = torch.device('cuda')
+device
+def seed_everything(seed = 42):
+    import random
+    import os
+    random.seed(seed)
+    os.environ["PYTHONHASHSEED"] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    
+seed_everything()
+from locationencoder.final_location_encoder import Geospatial_Encoder
 
 from configs.utils import config
+
+current_outputs = config["experiments"]["output_vars"][1]
+current_outputs
+import pytorch_lightning as pl
 
 # -------------************---------------------------------
 # loading all the data loaders here we will load the final data in torch.
@@ -35,7 +59,7 @@ from Dataloader.Modis_Data_loader.PM25_data_loader_analysis import (
 from Dataloader.Modis_Data_loader.PM25_data_loader_analysis import (
     Training_data_loader,
 )
-from locationencoder.final_location_encoder import Geospatial_Encoder
+
 
 
 # Defining the geospatial encoder outside of the argument as it should not coming again and again.
@@ -46,35 +70,12 @@ geospatial_encoder = Geospatial_Encoder(
     config["Geo_spatial_Encoder"]["dim_hidden"],
     config["Geo_spatial_Encoder"]["dim_out"],
     config["Geo_spatial_Encoder"]["num_layers"],
-)
-from Dataloader.Modis_Data_loader.torch_data_loader import Airqualitydataset
-from Dataloader.Modis_Data_loader.final_loader import Final_Air_Quality_Dataset_pipeline
-from src.Models.neural_process import NeuralProcess
-from loss_functions import LossFunctions
+).to("cpu")
 
-Loss = LossFunctions()
-from optimizer_utils import NPTrainer
-from optimizer_utils import neural_process_data
-from optimizer_utils import validation_function
-
-# importing the packages for the optimization.
 from Dataloader.Modis_Data_loader.torch_data_loader import Airqualitydataset
 from Dataloader.Modis_Data_loader.final_loader import Final_Air_Quality_Dataset_pipeline
 from src.Models.neural_process import NeuralProcess
 
-from loss_functions import LossFunctions
-
-Loss = LossFunctions()
-from optimizer_utils import NPTrainer
-from optimizer_utils import neural_process_data
-from optimizer_utils import validation_function
-
-# importing the packages for the optimization.
-from Dataloader.Modis_Data_loader.torch_data_loader import Airqualitydataset
-from Dataloader.Modis_Data_loader.final_loader import Final_Air_Quality_Dataset_pipeline
-from src.Models.neural_process import NeuralProcess
-
-""" In the belowmethod it is hard to make these many types of combinations so we will make a loop of input, output types and flags to create the final datasets."""
 
 
 """
@@ -92,16 +93,42 @@ from src.Models.neural_process import NeuralProcess
     3: ['PM2.5']
 
 """
+def seed_everything(seed = 42):
+    import random
+    import os
+    random.seed(seed)
+    os.environ["PYTHONHASHSEED"] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    
+seed_everything()
 
 
-input_type = [1, 2, 3, 4]
-output_type = [1, 2, 3]
-flag = ["Train", "Val", "Test"]
 
 
 """ Data set loop creating """
 # Now we will loop over all the combinations to create the final datasets.
+# """################################################"""
+# "check the pipeline where is the problem "
 
+# Final_Data = Final_Air_Quality_Dataset_pipeline(
+#                     config=config,
+#                     geospatial_encoder=geospatial_encoder.to(device),
+#                     flag="Train",
+#                     input_type=1,
+#                     output_type=1,
+#                 )
+
+# Final_Data("MODIS_AOD/merged_data_2018_sorted_dates.csv")
+input_type = [8, 10, 11, 12]  # 5 = with meteorological features (rh, ws, wd, temp, press)
+output_type = [1, 2, 3]
+flag = ["Train", "Val", "Test"]
+
+
+""""############################"""
 datasets = {}
 for i in input_type:
     if i == "":
@@ -125,7 +152,7 @@ for i in input_type:
                 )
                 Final_Data = Final_Air_Quality_Dataset_pipeline(
                     config=config,
-                    geospatial_encoder=geospatial_encoder,
+                    geospatial_encoder=geospatial_encoder.to(device),
                     flag=k,
                     input_type=i,
                     output_type=j,
@@ -136,35 +163,37 @@ for i in input_type:
                     "inputs": current_inputs,
                     "outputs": current_outputs,
                 }
+                
 
 # Checking the datsets sizes.
 
 # datasets[(input_types, output_type, flag)]
 
-datasets[(1, 2, "Train")]["inputs"].shape
-datasets[(1, 2, "Val")]["inputs"].shape
-datasets[(1, 2, "Test")]["inputs"].shape
-datasets[(1, 2, "Train")]["outputs"].shape
-datasets[(1, 2, "Val")]["outputs"].shape
-datasets[(1, 1, "Val")]["outputs"].shape
-datasets[(1, 2, "Test")]["outputs"].shape
-datasets[(1, 1, "Test")]["outputs"].shape
-datasets[(1, 1, "Train")]["inputs"].shape
-datasets[(1, 1, "Train")]["outputs"].shape
+# datasets[(1, 2, "Train")]["inputs"].shape
+# datasets[(1, 2, "Val")]["inputs"].shape
+# datasets[(1, 2, "Test")]["inputs"].shape
+# datasets[(1, 2, "Train")]["outputs"].shape
+# datasets[(1, 2, "Val")]["outputs"].shape
+# datasets[(1, 1, "Val")]["outputs"].shape
+# datasets[(1, 2, "Test")]["outputs"].shape
+# datasets[(1, 1, "Test")]["outputs"].shape
+# datasets[(1, 1, "Train")]["inputs"].shape
+# datasets[(1, 1, "Train")]["outputs"].shape
 
-# After preparing the datasets we will train the different models.
-# In our case onc ewe are training the model we have inout keys and putput keys are different but the flag is same.
+# # After preparing the datasets we will train the different models.
+# # In our case onc ewe are training the model we have inout keys and putput keys are different but the flag is same.
+# datasets[(1, 2, "Val")]["outputs"]
+# len(config["experiments"]["input_vars"][1])
+# len(config["experiments"]["output_vars"][1])
 
-len(config["experiments"]["input_vars"][1])
-len(config["experiments"]["output_vars"][1])
-
-float(config["train"]["lr"])
-len(datasets[(1, 1, "Train")]["inputs"][0])
-len(datasets[(1, 1, "Train")]["outputs"][0])
+# float(config["train"]["lr"])
+# len(datasets[(1, 1, "Train")]["inputs"][0])
+# len(datasets[(1, 1, "Train")]["outputs"][0])
+# datasets[(1, 1, "Train")]["outputs"]
 
 
-""" Training loop generation """
 
+"Here is the new one we are using "
 
 for input_key in input_type:
     if input_key == "":
@@ -175,1147 +204,102 @@ for input_key in input_type:
             print("Please check the output keys")
             continue
         print(f" Start Training of Input: {input_key} | Output : {output_key}")
-        # the current inputs and current outputs are:
+        # Input / output column names from config
         current_inputs = config["experiments"]["input_vars"][input_key]
         in_name = "_".join(current_inputs)
         current_outputs = config["experiments"]["output_vars"][output_key]
         out_name = "_".join(current_outputs)
         foldername = f"{in_name}____{out_name}"
-        # We can calculate the dimensions of the inputs and putputs to decide the number of model's layers.
-
-        x_dim = len(datasets[(input_key, output_key, "Train")]["inputs"][0])
-        y_dim = len(datasets[(input_key, output_key, "Train")]["outputs"][0])
-        # In this model the inputs and outputs are.
-        model = NeuralProcess(x_dim, y_dim, x_dim, y_dim, 128, 128).to("cpu")
-        current_time = datetime.now().strftime("%Y%m%d-%H%M%S")
-        # Defining the current check points and log directories.
-        current_log_dir = ROOT / "cpu_logs" / foldername / current_time
-        current_checkpoint_dir = ROOT / "cpu_checkpoints" / foldername / current_time
-        # defining the optimizer
+        # Extract training tensors
+        train_inputs = datasets[(input_key, output_key, "Train")]["inputs"]   # [N_train, x_dim]
+        train_outputs = datasets[(input_key, output_key, "Train")]["outputs"] # [N_train, y_dim]
+        print(f"DEBUG: Total rows for {foldername}: {len(train_outputs)}")
+        # Loss (DeepMind-style ELBO)
+        Loss = NPELBO(beta=1.0)
+        # Compute target mean/std for de-normalization in RMSE/R2
+        # train_outputs should be a tensor [N, y_dim] or [N_tasks, N_points, y_dim]
+        if train_outputs.dim() == 2:
+            # [N, y_dim]
+            t_mean = train_outputs.mean(dim=0)
+            t_std = train_outputs.std(dim=0)
+        else:
+            # e.g. [N_tasks, N_points, y_dim]
+            t_mean = train_outputs.mean(dim=(0, 1))
+            t_std = train_outputs.std(dim=(0, 1))
+        x_dim = train_inputs.shape[-1]
+        y_dim = train_outputs.shape[-1]
+        print(f"input dim : {x_dim}, output_dim : {y_dim}")
+        print(f"Input columns : {current_inputs}, output columns: {current_outputs}")
+        # Neural Process model: (x_dim, y_dim, hidden_dim, latent_dim)
+        model = NeuralProcess(x_dim, y_dim, hidden_dim=128, latent_dim=128).to(device)
+        # current_time = datetime.now().strftime("%Y-%m-%d__%H:%M")
+        # Log / checkpoint directories
+        current_log_dir = ROOT / "logs_20km" / foldername / global_run_id
+        current_checkpoint_dir = ROOT / "Gpu_checkpoints_tum" / foldername / global_run_id
+        # Optimizer
         Optimizer = optim.Adam(model.parameters(), lr=float(config["train"]["lr"]))
-        # Defining the training class
+        # Trainer
         Training = NPTrainer(
-            model=model,
+            model=model.to(device),
             optimizer=Optimizer,
             loss_fn=Loss,
-            device="cpu",
+            device=device,
             log_dir=current_log_dir,
             checkpoint_dir=current_checkpoint_dir,
+            input_dim=x_dim,
+            output_dim=y_dim,
+            context_min=50,
+            context_max=100,
+            num_target=200,
+            target_mean=t_mean,
+            target_std=t_std,
         )
-        # To check the model's accuracy in validation data set we will use this.
         best_val_loss = float("inf")
-        # these are the training data sets
-
+        # Build NP datasets (each item is a "task" of 25 points)
         NeuralProcess_Train_data = neural_process_data(
             datasets[(input_key, output_key, "Train")]["inputs"],
             datasets[(input_key, output_key, "Train")]["outputs"],
-            num_points_per_task=200,
+            num_points_per_task=25,
         )
-
         NeuralProcess_Train_dataloader = DataLoader(
             NeuralProcess_Train_data,
             batch_size=16,
             shuffle=True,
-            num_workers=0,
+            num_workers=4,
+            pin_memory=True,
+            persistent_workers=True,
         )
-        # Now we will define the validation datasets as well as validation dataloasers
-        # NeuralProcess_Val_datasets = {}
         NeuralProcess_Val_data = neural_process_data(
             datasets[(input_key, output_key, "Val")]["inputs"],
             datasets[(input_key, output_key, "Val")]["outputs"],
-            num_points_per_task=200,
+            num_points_per_task=25,
         )
-
-        # NeuralProcess_Val_dataloaders = {}
         NeuralProcess_Val_dataloader = DataLoader(
             NeuralProcess_Val_data,
             batch_size=16,
             shuffle=False,
-            num_workers=0,
+            num_workers=4,  # num of workers should be > 0 if pin_memory = True
+            pin_memory=True,
+            persistent_workers=True,
         )
-
         for epoch in range(100):
             # Train
-            train_loss = Training.train_epoch(NeuralProcess_Train_dataloader, epoch)
-            val_loss = validation_function(
-                model=model,
-                val_dataloader=NeuralProcess_Val_dataloader,
-                loss_fn=Loss,
-                device="cpu",
+            train_loss = Training.train_epoch(
+                NeuralProcess_Train_dataloader,
+                epoch,
+                target_col_names=current_outputs,
             )
+            val_loss = Training.evaluate(NeuralProcess_Val_dataloader)
+            Training.writer.add_scalar("Loss/Validation", val_loss, epoch)
             print(
                 f"Epoch:{epoch} | Val_loss:{val_loss:.4f} | Train_loss:{train_loss:.4f}"
             )
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
                 Training.save_checkpoint(epoch)
-                print(f" >>> Saved New Best Model found! ")
+                print(" >>> Saved New Best Model found! ")
+        Training.log_final_hparams(best_val_loss)
+        print(f"Finished Training for {foldername}")
+        Training.writer.close()
 
 
-""" The above code is the optimized version of the code used in first trial. """
-
-
-# NeuraProcessData_latlon_PM25 = neural_process_data(
-#     fnal_data_latlong_PM25[0],
-#     fnal_data_latlong_PM25[1],
-#     nm_points_per_task=200,
-# )
-
-
-#     dataloader_latlon_PM25 = DataLoader(
-#     dataset=NeuralProcessData_latlon_PM25,
-#     batch_size=16,
-#     shuffle=True,
-#     num_workers=0,
-# )
-
-
-# ##################################################################
-# # -------------Training of Lat_Lon_PM25 data
-# ##################################################################
-# current_time = datetime.now().strftime("%Y%m%d-%H%M%S")
-# unique_log_dir = f"./logs/latlon_PM25/{current_time}"
-# unique_checkpoint_dir = f"./checkpoints/latlon_PM25/{current_time}"
-# Training = NPTrainer(
-#     model=model_latlon_PM25,
-#     optimizer=Optimizer_latlong_PM25,
-#     loss_fn=Loss,
-#     device="cpu",
-#     log_dir=unique_log_dir,
-#     checkpoint_dir=unique_checkpoint_dir,
-# )
-# #  running the epochs.
-# #  ... definitions above ...
-
-# #  Define a "best loss" to track improvement
-# best_val_loss = float("inf")
-# #
-# for epoch in range(100):  # Run for 100 epochs
-#     # 1. TRAIN
-#     train_loss = Training.train_epoch(dataloader_latlon_PM25, epoch)
-#     # 2. VALIDATE (Call the function we just wrote)
-#     val_loss = validation_function(
-#         model=model_latlon_PM25,  # Access model from your Trainer class
-#         val_dataloader=dataloader_val_latlon_PM25,  # You need a separate loader for val data
-#         loss_fn=Loss,
-#         device="cpu",
-#     )
-#     print(f"Epoch {epoch} | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}")
-#     # 3. SAVE ONLY IF BETTER
-#     if val_loss < best_val_loss:
-#         best_val_loss = val_loss
-#         Training.save_checkpoint(epoch)
-#         print(f"   >>> SAVED: New best model found!")
-
-
-# from src.Models.neural_process import NeuralProcess
-
-# """
-# Final models for training........... making attributes from the class
-# """
-
-# model_latlon_AOD_PM25 = NeuralProcess(128, 2, 128, 2, 128, 128)
-# model_latlon_AOD = NeuralProcess(127, 2, 127, 2, 128, 128)
-# model_latlon_PM25 = NeuralProcess(127, 2, 127, 2, 128, 128)
-# model_latlon = NeuralProcess(126, 2, 126, 2, 128, 128)
-
-# Optimizer = optim.Adam(
-#     model_latlon_AOD_PM25.parameters(), lr=float(config["train"]["lr"])
-# )
-# Optimizer_latlong_AOD = optim.Adam(
-#     model_latlon_AOD.parameters(), lr=float(config["train"]["lr"])
-# )
-# Optimizer_latlong_PM25 = optim.Adam(
-#     model_latlon_PM25.parameters(), lr=float(config["train"]["lr"])
-# )
-# Optimizer_latlong = optim.Adam(
-#     model_latlon.parameters(), lr=float(config["train"]["lr"])
-# )
-
-
-# import torch.optim as optim
-# from optimizer_utils import NPTrainer
-# from loss_functions import LossFunctions
-
-# Loss = LossFunctions()
-
-# current_time = datetime.now().strftime("%Y%m%d-%H%M%S")
-# # we store the logs to store the losses to plot for the tensorboard.
-# unique_log_dir = f"./logs/latlon/{current_time}"
-# unique_checkpoint_dir = f"./checkpoints/latlon/{current_time}"
-
-# dataloader = DataLoader(
-#     dataset=NeuralProcessData_latlon_AOD_PM25,
-#     batch_size=16,
-#     shuffle=True,
-#     num_workers=0,
-# )
-# dataloader.dataset
-
-# dataloader_latlon_AOD = DataLoader(
-#     dataset=NeuralProcessData_latlon_AOD,
-#     batch_size=16,
-#     shuffle=True,
-#     num_workers=0,
-# )
-
-# dataloader_latlon_PM25 = DataLoader(
-#     dataset=NeuralProcessData_latlon_PM25,
-#     batch_size=16,
-#     shuffle=True,
-#     num_workers=0,
-# )
-# NeuralProcessData_latlon_PM25
-# dataloader_latlon = DataLoader(
-#     dataset=NeuralProcessData_latlon,
-#     batch_size=16,
-#     shuffle=True,
-#     num_workers=0,
-# )
-# """ Training also we will do in terms of looping to not to get confuse later due to 12 models training."""
-
-
-# # H
-
-
-# Training = NPTrainer(
-#     model=model_latlon,
-#     optimizer=Optimizer_latlong,
-#     loss_fn=Loss,
-#     device="cpu",
-#     log_dir=unique_log_dir,
-#     checkpoint_dir=unique_checkpoint_dir,
-# )
-# #  running the epochs.
-# #  ... definitions above ...
-
-# #  Define a "best loss" to track improvement
-# best_val_loss = float("inf")
-# #
-# for epoch in range(10):  # Run for 100 epochs
-#     # 1. TRAIN
-#     train_loss = Training.train_epoch(dataloader_latlon, epoch)
-#     # 2. VALIDATE (Call the function we just wrote)
-#     val_loss = validation_function(
-#         model=Training.model,  # Access model from your Trainer class
-#         val_dataloader=dataloader_val_latlon,  # You need a separate loader for val data
-#         loss_fn=Loss,
-#         device="cpu",
-#     )
-#     print(f"Epoch {epoch} | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}")
-#     # 3. SAVE ONLY IF BETTER
-#     if val_loss < best_val_loss:
-#         best_val_loss = val_loss
-#         Training.save_checkpoint(epoch)
-#         print(f"   >>> SAVED: New best model found!")
-
-
-# """   For type 1 target_columns = ['AOD', 'PM2.5'] & Training dataset      """
-
-
-# # for type 1 target_columns = ['AOD', 'PM2.5'] & Training dataset
-
-# #                       Training data
-
-# Final_Data_Train_latlong_AOD_PM25 = Final_Air_Quality_Dataset_pipeline(
-#     config=config,
-#     geospatial_encoder=geospatial_encoder,
-#     flag="Train",
-#     input_type=1,
-#     output_type=1,
-# )
-
-
-# Final_Data_Train_latlong_AOD_PM25 = Final_Data_Train_latlong_AOD_PM25.full_pipeline()
-# Final_Data_Train_latlong_AOD_PM25[0].shape
-
-# Final_Data_Train_latlong_AOD = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Train", input_type=2, output_type=1
-# )
-# Final_Data_Train_latlong_AOD = Final_Data_Train_latlong_AOD.full_pipeline()
-# Final_Data_Train_latlong_AOD[0].shape
-# Final_Data_Train_latlong_PM25 = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Train", input_type=3, output_type=1
-# )
-# Final_Data_Train_latlong_PM25 = Final_Data_Train_latlong_PM25.full_pipeline()
-# Final_Data_Train_latlong_PM25[0].shape
-
-# Final_Data_Train_latlong = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Train", input_type=4, output_type=1
-# )
-# Final_Data_Train_latlong = Final_Data_Train_latlong.full_pipeline()
-# Final_Data_Train_latlong[0].shape
-
-
-# #                     Val data
-
-
-# Final_Data_Train_latlong_AOD_PM25 = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Val", input_type=1, output_type=1
-# )
-# Final_Data_Train_latlong_AOD_PM25 = Final_Data_Train_latlong_AOD_PM25.full_pipeline()
-# Final_Data_Train_latlong_AOD_PM25[0].shape
-
-# Final_Data_Train_latlong_AOD = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Val", input_type=2, output_type=1
-# )
-# Final_Data_Train_latlong_AOD = Final_Data_Train_latlong_AOD.full_pipeline()
-# Final_Data_Train_latlong_AOD[0].shape
-# Final_Data_Train_latlong_PM25 = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Val", input_type=3, output_type=1
-# )
-# Final_Data_Train_latlong_PM25 = Final_Data_Train_latlong_PM25.full_pipeline()
-# Final_Data_Train_latlong_PM25[0].shape
-
-# Final_Data_Train_latlong = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Val", input_type=4, output_type=1
-# )
-# Final_Data_Train_latlong = Final_Data_Train_latlong.full_pipeline()
-# Final_Data_Train_latlong[0].shape
-
-
-# #                          Test data
-
-
-# Final_Data_Train_latlong_AOD_PM25 = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Test", input_type=1, output_type=1
-# )
-# Final_Data_Train_latlong_AOD_PM25 = Final_Data_Train_latlong_AOD_PM25.full_pipeline()
-# Final_Data_Train_latlong_AOD_PM25[0].shape
-
-# Final_Data_Train_latlong_AOD = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Test", input_type=2, output_type=1
-# )
-# Final_Data_Train_latlong_AOD = Final_Data_Train_latlong_AOD.full_pipeline()
-# Final_Data_Train_latlong_AOD[0].shape
-# Final_Data_Train_latlong_PM25 = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Test", input_type=3, output_type=1
-# )
-# Final_Data_Train_latlong_PM25 = Final_Data_Train_latlong_PM25.full_pipeline()
-# Final_Data_Train_latlong_PM25[0].shape
-
-# Final_Data_Train_latlong = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Test", input_type=4, output_type=1
-# )
-# Final_Data_Train_latlong = Final_Data_Train_latlong.full_pipeline()
-# Final_Data_Train_latlong[0].shape
-
-
-# """   For type 2 target_columns = ['AOD'] & Training dataset      """
-
-
-# #                       Training data
-
-# Final_Data_Train_latlong_AOD_PM25 = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Train", input_type=1, output_type=2
-# )
-# Final_Data_Train_latlong_AOD_PM25 = Final_Data_Train_latlong_AOD_PM25.full_pipeline()
-# Final_Data_Train_latlong_AOD_PM25[0].shape
-
-# Final_Data_Train_latlong_AOD = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Train", input_type=2, output_type=2
-# )
-# Final_Data_Train_latlong_AOD = Final_Data_Train_latlong_AOD.full_pipeline()
-# Final_Data_Train_latlong_AOD[0].shape
-# Final_Data_Train_latlong_PM25 = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Train", input_type=3, output_type=2
-# )
-# Final_Data_Train_latlong_PM25 = Final_Data_Train_latlong_PM25.full_pipeline()
-# Final_Data_Train_latlong_PM25[0].shape
-
-# Final_Data_Train_latlong = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Train", input_type=4, output_type=2
-# )
-# Final_Data_Train_latlong = Final_Data_Train_latlong.full_pipeline()
-# Final_Data_Train_latlong[0].shape
-
-
-# #                     Val data
-
-
-# Final_Data_Val_latlong_AOD_PM25 = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Val", input_type=1, output_type=2
-# )
-# Final_Data_Val_latlong_AOD_PM25 = Final_Data_Val_latlong_AOD_PM25.full_pipeline()
-# Final_Data_Val_latlong_AOD_PM25[0].shape
-
-# Final_Data_Val_latlong_AOD = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Val", input_type=2, output_type=2
-# )
-# Final_Data_Val_latlong_AOD = Final_Data_Val_latlong_AOD.full_pipeline()
-# Final_Data_Val_latlong_AOD[0].shape
-# Final_Data_Val_latlong_PM25 = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Val", input_type=3, output_type=2
-# )
-# Final_Data_Val_latlong_PM25 = Final_Data_Val_latlong_PM25.full_pipeline()
-# Final_Data_Val_latlong_PM25[0].shape
-
-# Final_Data_Val_latlong = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Val", input_type=4, output_type=2
-# )
-# Final_Data_Val_latlong = Final_Data_Val_latlong.full_pipeline()
-# Final_Data_Val_latlong[0].shape
-
-
-# #                          Test data
-
-
-# Final_Data_Test_latlong_AOD_PM25 = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Test", input_type=1, output_type=2
-# )
-# Final_Data_Test_latlong_AOD_PM25 = Final_Data_Test_latlong_AOD_PM25.full_pipeline()
-# Final_Data_Test_latlong_AOD_PM25[0].shape
-
-# Final_Data_Test_latlong_AOD = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Test", input_type=2, output_type=2
-# )
-# Final_Data_Test_latlong_AOD = Final_Data_Test_latlong_AOD.full_pipeline()
-# Final_Data_Test_latlong_AOD[0].shape
-# Final_Data_Test_latlong_PM25 = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Test", input_type=3, output_type=2
-# )
-# Final_Data_Test_latlong_PM25 = Final_Data_Test_latlong_PM25.full_pipeline()
-# Final_Data_Test_latlong_PM25[0].shape
-# Final_Data_Test_latlong = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Test", input_type=4, output_type=2
-# )
-# Final_Data_Test_latlong = Final_Data_Test_latlong.full_pipeline()
-# Final_Data_Test_latlong[0].shape
-
-
-# """   For type 3 target_columns = ['PM2.5'] & Training dataset      """
-
-# #                       Training data
-
-# Final_Data_Train_latlong_AOD_PM25 = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Train", input_type=1, output_type=3
-# )
-# Final_Data_Train_latlong_AOD_PM25 = Final_Data_Train_latlong_AOD_PM25.full_pipeline()
-# Final_Data_Train_latlong_AOD_PM25[0].shape
-
-# Final_Data_Train_latlong_AOD = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Train", input_type=2, output_type=3
-# )
-# Final_Data_Train_latlong_AOD = Final_Data_Train_latlong_AOD.full_pipeline()
-# Final_Data_Train_latlong_AOD[0].shape
-# Final_Data_Train_latlong_PM25 = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Train", input_type=3, output_type=3
-# )
-# Final_Data_Train_latlong_PM25 = Final_Data_Train_latlong_PM25.full_pipeline()
-# Final_Data_Train_latlong_PM25[0].shape
-
-# Final_Data_Train_latlong = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Train", input_type=4, output_type=3
-# )
-# Final_Data_Train_latlong = Final_Data_Train_latlong.full_pipeline()
-# Final_Data_Train_latlong[0].shape
-
-
-# #                     Val data
-
-
-# Final_Data_Val_latlong_AOD_PM25 = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Val", input_type=1, output_type=3
-# )
-# Final_Data_Val_latlong_AOD_PM25 = Final_Data_Train_latlong_AOD_PM25.full_pipeline()
-# Final_Data_Val_latlong_AOD_PM25[0].shape
-
-# Final_Data_Val_latlong_AOD = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Val", input_type=2, output_type=3
-# )
-# Final_Data_Val_latlong_AOD = Final_Data_Val_latlong_AOD.full_pipeline()
-# Final_Data_Val_latlong_AOD[0].shape
-# Final_Data_Val_latlong_PM25 = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Val", input_type=3, output_type=3
-# )
-# Final_Data_Val_latlong_PM25 = Final_Data_Val_latlong_PM25.full_pipeline()
-# Final_Data_Val_latlong_PM25[0].shape
-# Final_Data_Val_latlong = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Val", input_type=4, output_type=3
-# )
-# Final_Data_Val_latlong = Final_Data_Val_latlong.full_pipeline()
-# Final_Data_Val_latlong[0].shape
-
-
-# #                          Test data
-
-
-# Final_Data_Test_latlong_AOD_PM25 = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Test", input_type=1, output_type=3
-# )
-# Final_Data_Test_latlong_AOD_PM25 = Final_Data_Test_latlong_AOD_PM25.full_pipeline()
-# Final_Data_Test_latlong_AOD_PM25[0].shape
-
-# Final_Data_Test_latlong_AOD = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Test", input_type=2, output_type=3
-# )
-# Final_Data_Test_latlong_AOD = Final_Data_Test_latlong_AOD.full_pipeline()
-# Final_Data_Test_latlong_AOD[0].shape
-# Final_Data_Test_latlong_PM25 = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Test", input_type=3, output_type=3
-# )
-# Final_Data_Test_latlong_PM25 = Final_Data_Test_latlong_PM25.full_pipeline()
-# Final_Data_Test_latlong_PM25[0].shape
-# Final_Data_Test_latlong = Final_Air_Quality_Dataset_pipeline(
-#     config=config, flag="Test", input_type=4, output_type=3
-# )
-# Final_Data_Test_latlong = Final_Data_Test_latlong.full_pipeline()
-# Final_Data_Test_latlong[0].shape
-
-
-# # we will lets down the final data sets
-
-
-# #                       Validation data
-
-
-# # .........................................................
-
-# from Dataloader.Modis_Data_loader.torch_data_loader import (
-#     AirQualityDataset_latlon_AOD_PM25,
-#     AirQualityDataset_latlon_AOD,
-#     AirQualityDataset_latlon_PM25,
-#     AirQualityDataset_latlon,
-#     Airqualitydataset,
-# )
-
-
-# # importing config files
-# from Dataloader.Modis_Data_loader.final_loader import (
-#     Final_Air_Quality_Dataset_pipeline_latlon_AOD_PM25,
-#     Final_Air_Quality_Dataset_pipeline_latlon_AOD,
-#     Final_Air_Quality_Dataset_pipeline_latlon_PM25,
-#     Final_Air_Quality_Dataset_pipeline_latlon,
-#     Final_Air_Quality_Dataset_pipeline,
-# )
-
-# """
-# Validation data set
-# """
-
-
-# from Dataloader.Modis_Data_loader.final_loader import (
-#     Final_Air_Quality_Dataset_pipeline_latlon_AOD_PM25_val,
-#     Final_Air_Quality_Dataset_pipeline_latlon_AOD_val,
-#     Final_Air_Quality_Dataset_pipeline_latlon_PM25_val,
-#     Final_Air_Quality_Dataset_pipeline_latlon_val,
-# )
-
-
-# """
-# Test data set
-# """
-# from Dataloader.Modis_Data_loader.final_loader import (
-#     Final_Air_Quality_Dataset_pipeline_latlon_AOD_PM25_test,
-#     Final_Air_Quality_Dataset_pipeline_latlon_AOD_test,
-#     Final_Air_Quality_Dataset_pipeline_latlon_PM25_test,
-#     Final_Air_Quality_Dataset_pipeline_latlon_test,
-# )
-
-# # importing the loss function
-# from loss_functions import LossFunctions
-
-
-# """
-# Instances for the training data set
-# """
-# # -------------************--------------------------------
-# # Creating all the instance here
-
-# instance_latlon_AOD_PM25 = Final_Air_Quality_Dataset_pipeline_latlon_AOD_PM25(config)
-# instance_latlon_AOD = Final_Air_Quality_Dataset_pipeline_latlon_AOD(config)
-# instance_latlon_PM25 = Final_Air_Quality_Dataset_pipeline_latlon_PM25(config)
-# intance_latlon = Final_Air_Quality_Dataset_pipeline_latlon(config)
-
-
-# # final data with latitude, longitude, AOD and PM2.5
-# instance_latlon_AOD_PM25.modis_data_sets()
-# instance_latlon_AOD_PM25.stations_data_sets()
-# instance_latlon_AOD_PM25.PM_25_data()
-# instance_latlon_AOD_PM25.training_data()
-# instance_latlon_AOD_PM25.Torch_data()
-# final_data_latlong_AOD_PM25 = instance_latlon_AOD_PM25.full_pipeline()
-# len(final_data_latlong_AOD_PM25[0])
-
-# final_data_latlong_AOD_PM25[1].shape
-# # final data with latitude, longitude and AOD
-
-# instance_latlon_AOD.modis_data_sets()
-# instance_latlon_AOD.stations_data_sets()
-# instance_latlon_AOD.PM_25_data()
-# instance_latlon_AOD.training_data()
-# instance_latlon_AOD.Torch_data()
-# final_data_latlong_AOD = instance_latlon_AOD.full_pipeline()
-# final_data_latlong_AOD[0]
-# final_data_latlong_AOD[1][0]
-
-# # final data with latitude, longitude  and PM2.5
-# instance_latlon_PM25.modis_data_sets()
-# instance_latlon_PM25.stations_data_sets()
-# instance_latlon_PM25.PM_25_data()
-# instance_latlon_PM25.training_data()
-# instance_latlon_PM25.Torch_data()
-# final_data_latlong_PM25 = instance_latlon_PM25.full_pipeline()
-# final_data_latlong_PM25[0].shape
-# final_data_latlong_PM25[1]
-
-# # final data with latitude and longitude
-# intance_latlon.modis_data_sets()
-# intance_latlon.stations_data_sets()
-# intance_latlon.PM_25_data()
-# intance_latlon.training_data()
-# intance_latlon.Torch_data()
-# final_data_latlong = intance_latlon.full_pipeline()
-# final_data_latlong[0].shape
-# final_data_latlong[1][0]
-
-
-# # -------------************--------------------------------
-# """
-# Final training data.................
-# """
-# final_data_latlong_AOD_PM25
-
-# final_data_latlong_AOD_PM25
-# final_data_latlong_AOD[0].shape
-# final_data_latlong_PM25[0].shape
-# final_data_latlong[0].shape
-
-# for i, t in enumerate(final_data_latlong_AOD_PM25):
-#     print(i, t.shape)
-# # final data sets wit x, y in torch tensor form
-# final_data_latlong_AOD_PM25[0].shape
-# x, y = final_data_latlong_AOD
-# x.shape
-# final_data_latlong_PM25
-# final_data_latlong
-
-
-# """
-# Instances for the test data
-
-# """
-# instance_latlon_AOD_PM25_val = Final_Air_Quality_Dataset_pipeline_latlon_AOD_PM25_val(
-#     config
-# )
-# instance_latlon_AOD_val = Final_Air_Quality_Dataset_pipeline_latlon_AOD_val(config)
-# instance_latlon_PM25_val = Final_Air_Quality_Dataset_pipeline_latlon_PM25_val(config)
-# instance_latlon_val = Final_Air_Quality_Dataset_pipeline_latlon_val(config)
-
-# """
-# Final test data sets
-# """
-# # latlon_AOD_pm25
-
-# instance_latlon_AOD_PM25_val.modis_data_sets()
-# instance_latlon_AOD_PM25_val.stations_data_sets()
-# instance_latlon_AOD_PM25_val.PM_25_data()
-# instance_latlon_AOD_PM25_val.training_data()
-# instance_latlon_AOD_PM25_val.Torch_data()
-# final_data_latlong_AOD_PM25_val = instance_latlon_AOD_PM25_val.full_pipeline()
-# final_data_latlong_AOD_PM25_val
-
-# # latlon_AOD
-# instance_latlon_AOD_val.modis_data_sets()
-# instance_latlon_AOD_val.stations_data_sets()
-# instance_latlon_AOD_val.PM_25_data()
-# instance_latlon_AOD_val.training_data()
-# instance_latlon_AOD_val.Torch_data()
-# final_data_latlong_AOD_val = instance_latlon_AOD_val.full_pipeline()
-# final_data_latlong_AOD_val[0].shape
-
-
-# # latlon_PM2.5
-# instance_latlon_PM25_val.modis_data_sets()
-# instance_latlon_PM25_val.stations_data_sets()
-# instance_latlon_PM25_val.PM_25_data()
-# instance_latlon_PM25_val.training_data()
-# instance_latlon_PM25_val.Torch_data()
-# final_data_latlong_PM25_val = instance_latlon_PM25_val.full_pipeline()
-# final_data_latlong_PM25_val[0].shape
-
-
-# # latlon
-# instance_latlon_val.modis_data_sets()
-# instance_latlon_val.stations_data_sets()
-# instance_latlon_val.PM_25_data()
-# instance_latlon_val.training_data()
-# instance_latlon_val.Torch_data()
-# final_data_latlong_val = instance_latlon_val.full_pipeline()
-# final_data_latlong_val[0].shape
-
-# # ************************ Final validation data ***************************************
-# final_data_latlong_AOD_PM25_val[0].shape
-# final_data_latlong_AOD_val[0].shape
-# final_data_latlong_PM25_val[0].shape
-# final_data_latlong_val[0].shape
-# # -------------************--------------------------------
-
-# # training the model in different sdata sets and storing the weights.
-
-# # -------------************--------------------------------
-
-# # importing the model from model file.
-# """
-# Importing the model................
-# """
-
-# from src.Models.neural_process import NeuralProcess
-
-# # self, x_c_dim, y_c_dim, x_t_dim, y_t_dim, hidden_dim, latent_dim
-# # self, x_target_dim, z_dim, hidden_dim, y_target_dim
-# # self, x_c_dim, y_c_dim, x_t_dim, y_t_dim, hidden_dim, latent_dim
-
-# # Creating the models those are compatible with the all kinds of inputs.
-
-# # -------------************---------------------------------
-
-# """
-# Final models for training........... making attributes from the class
-# """
-
-# model_latlon_AOD_PM25 = NeuralProcess(128, 2, 128, 2, 128, 128)
-# model_latlon_AOD = NeuralProcess(127, 2, 127, 2, 128, 128)
-# model_latlon_PM25 = NeuralProcess(127, 2, 127, 2, 128, 128)
-# model_latlon = NeuralProcess(126, 2, 126, 2, 128, 128)
-
-
-# """
-# Here we will import the loss function...........
-# """
-# # self, beta, learning_rate, stepsize, Number_of_steps, device#
-# Loss = LossFunctions()
-
-
-# """
-# Now we have model, loss function, data from here we can build the model trainer that will train the model with the tensor board.
-
-# The first & second class --: will devide the data in to chunks and also train, val and test this will create a final data loader.
-
-# Third class --: this class will create the loop for train the network.
-
-# Fourth class --: will validate the data set
-
-# Fifth step --: will evaluate the model.
-
-# """
-
-# # ------------ The first step is to devide the data in terms of context and test sets.
-
-
-# from optimizer_utils import context_target_split
-
-# C_T_data = context_target_split(
-#     final_data_latlong_AOD_PM25[0].unsqueeze(0),
-#     final_data_latlong_AOD_PM25[1].unsqueeze(0),
-# )
-
-# C_T_data[0].shape
-# C_T_data[1].shape
-# C_T_data[2].shape
-# C_T_data[3].shape
-
-# final_data_latlong_AOD_PM25[0].unsqueeze(0)[0]
-
-# """ self,
-#         model,
-#         optimizer,
-#         loss_fn,
-#         device,
-#         log_dir="./logs",
-#         checkpoint_dir="./checkpoints",
-# """
-
-# # Importing the optimizer
-# import torch.optim as optim
-
-# float(float(config["train"]["lr"]))
-# # here we are using ADAM optimizer.
-
-# Optimizer = optim.Adam(
-#     model_latlon_AOD_PM25.parameters(), lr=float(config["train"]["lr"])
-# )
-# Optimizer_latlong_AOD = optim.Adam(
-#     model_latlon_AOD.parameters(), lr=float(config["train"]["lr"])
-# )
-# Optimizer_latlong_PM25 = optim.Adam(
-#     model_latlon_PM25.parameters(), lr=float(config["train"]["lr"])
-# )
-# Optimizer_latlong = optim.Adam(
-#     model_latlon.parameters(), lr=float(config["train"]["lr"])
-# )
-
-# # Importing the trainer
-
-# final_data_latlong_AOD_PM25[0].__getitem__(10)
-# # First data ser priority will be
-# # def train_epoch(self, dataloader, epoch_idx):
-
-
-# """
-# neural_process_data converts the data from the final paipe line to dataloader format so that we can convert the data and access in the __getitem__ form.
-# """
-
-# from optimizer_utils import neural_process_data
-# # now to start training we need a data-loader that
-
-# # for train data
-
-# NeuralProcessData_latlon_AOD_PM25 = neural_process_data(
-#     final_data_latlong_AOD_PM25[0],
-#     final_data_latlong_AOD_PM25[1],
-#     num_points_per_task=200,
-# )
-
-# # for test data
-
-# NeuralProcessData_latlon_AOD_PM25_val = neural_process_data(
-#     final_data_latlong_AOD_PM25_val[0],
-#     final_data_latlong_AOD_PM25_val[1],
-#     num_points_per_task=200,
-# )
-
-
-# NeuralProcessData_latlon_AOD = neural_process_data(
-#     final_data_latlong_AOD[0],
-#     final_data_latlong_AOD[1],
-#     num_points_per_task=200,
-# )
-
-# # for test data
-
-# NeuralProcessData_latlon_AOD_val = neural_process_data(
-#     final_data_latlong_AOD_val[0],
-#     final_data_latlong_AOD_val[1],
-#     num_points_per_task=200,
-# )
-
-# NeuralProcessData_latlon_PM25 = neural_process_data(
-#     final_data_latlong_PM25[0],
-#     final_data_latlong_PM25[1],
-#     num_points_per_task=200,
-# )
-
-# # for test data
-
-# NeuralProcessData_latlon_PM25_val = neural_process_data(
-#     final_data_latlong_PM25_val[0],
-#     final_data_latlong_PM25_val[1],
-#     num_points_per_task=200,
-# )
-
-# NeuralProcessData_latlon = neural_process_data(
-#     final_data_latlong[0],
-#     final_data_latlong[1],
-#     num_points_per_task=200,
-# )
-
-# # for test data
-
-# NeuralProcessData_latlon_val = neural_process_data(
-#     final_data_latlong_val[0],
-#     final_data_latlong_val[1],
-#     num_points_per_task=200,
-# )
-
-
-# # ------------------------------- practice --------------------
-
-# X_task, Y_task = NeuralProcessData_latlon_AOD[0]
-# X_task.shape
-# Y_task.shape
-
-# # ------------------------------- practice ----------------------------------
-# """
-# Creating the final data loaders for train val and test sets.
-# """
-
-# # ------------------- Here we will start training ---------------------------
-
-# # creating data loader for training data
-
-# dataloader = DataLoader(
-#     dataset=NeuralProcessData_latlon_AOD_PM25,
-#     batch_size=16,
-#     shuffle=True,
-#     num_workers=0,
-# )
-# dataloader.dataset
-
-# dataloader_latlon_AOD = DataLoader(
-#     dataset=NeuralProcessData_latlon_AOD,
-#     batch_size=16,
-#     shuffle=True,
-#     num_workers=0,
-# )
-
-# dataloader_latlon_PM25 = DataLoader(
-#     dataset=NeuralProcessData_latlon_PM25,
-#     batch_size=16,
-#     shuffle=True,
-#     num_workers=0,
-# )
-
-# dataloader_latlon = DataLoader(
-#     dataset=NeuralProcessData_latlon,
-#     batch_size=16,
-#     shuffle=True,
-#     num_workers=0,
-# )
-
-# for x, y in dataloader_latlon_PM25:
-#     x.shape, y.shape
-
-# for x, y in dataloader_latlon_AOD:
-#     x.shape, y.shape
-
-# for x, y in dataloader_latlon:
-#     x.shape, y.shape
-
-
-# # checking the size and shape of data loader
-# for x, y in dataloader:
-#     print(x.shape, y.shape)
-# len(dataloader)
-
-
-# # ---------------------  Creating the validation data loaders --------------------------------
-
-
-# # creating data loader fo rvalidation data
-# dataloader_val = DataLoader(
-#     dataset=NeuralProcessData_latlon_AOD_PM25_val,
-#     batch_size=16,
-#     shuffle=True,
-#     num_workers=0,
-# )
-
-
-# dataloader_val_latlon_AOD = DataLoader(
-#     dataset=NeuralProcessData_latlon_AOD_val,
-#     batch_size=16,
-#     shuffle=True,
-#     num_workers=0,
-# )
-
-
-# dataloader_val_latlon_PM25 = DataLoader(
-#     dataset=NeuralProcessData_latlon_PM25_val,
-#     batch_size=16,
-#     shuffle=True,
-#     num_workers=0,
-# )
-
-# dataloader_val_latlon = DataLoader(
-#     dataset=NeuralProcessData_latlon_val,
-#     batch_size=16,
-#     shuffle=True,
-#     num_workers=0,
-# )
-
-
-# # checking the size and shape of data loader
-# for x, y in dataloader_val:
-#     print(x.shape, y.shape)
-# len(dataloader_val)
-
-
-# for x, y in dataloader_val_latlon_AOD:
-#     x.shape, y.shape
-
-
-# for x, y in dataloader_val_latlon_PM25:
-#     x.shape, y.shape
-
-# for x, y in dataloader_val_latlon:
-#     x.shape, y.shape
-# # In this way we can extract the x, y batches from dataloader.
-
-# """
-# How to check the training dataloader
-# """
-
-# len(dataloader)
-# Xb, Yb = next(iter(dataloader))
-# Xb.shape, Yb.shape
-
-
-# """
-# Start training for all the models in their respective data sets
-# """
-
-# # importing the trainer
-# from optimizer_utils import NPTrainer
-# from optimizer_utils import validation_function
-
-# # cretaing and saving the logs as per the current training.
-# current_time = datetime.now().strftime("%Y%m%d-%H%M%S")
-# unique_log_dir = f"./logs/latlon_AOD_PM25/{current_time}"
-# unique_checkpoint_dir = f"/Users/pavankumar/Documents/Winter_Thesis/Coding_Learning/Master-Thesis/checkpoints/latlon_AOD/{current_time}"
-
-# ## 1 -----------------------  Lat_Lon_AOD_PM2.5 data -----------------------------
-# ##################################################################################
-# # Training the model
-# #
-# Training = NPTrainer(
-#     model=model_latlon_AOD_PM25,
-#     optimizer=Optimizer,
-#     loss_fn=Loss,
-#     device="cpu",
-#     log_dir=unique_log_dir,
-#     checkpoint_dir=unique_checkpoint_dir,
-# )
-
-# # running the epochs.
-# # ... definitions above ...
-# #
-# # Define a "best loss" to track improvement
-# best_val_loss = float("inf")
-
-# for epoch in range(10):  # Run for 100 epochs
-#     # 1. TRAIN
-#     train_loss = Training.train_epoch(dataloader, epoch)
-
-#     # 2. VALIDATE (Call the function we just wrote)
-#     val_loss = validation_function(
-#         model=Training.model,  # Access model from your Trainer class
-#         val_dataloader=dataloader_val,  # You need a separate loader for val data
-#         loss_fn=Loss,
-#         device="cpu",
-#     )
-
-#     print(f"Epoch {epoch} | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}")
-
-#     # 3. SAVE ONLY IF BETTER
-#     if val_loss < best_val_loss:
-#         best_val_loss = val_loss
-#         Training.save_checkpoint(epoch)
-#         print(f"   >>> SAVED: New best model found!")
-
-
-# ##################################################################################
-# # """
-# # Now we need to export the validation data-set so that our trained models can be validated and model with best weights can be selected.
-# # """
-
-
-# # self, model, val_dataloader, device, Loss, context_target_split
-# # Now we are extracting the weights and will be using it for the testing purpose we will make our model ready for test.
-
-
-# ##################################################################
-# # ----------- Training of Lat_Lon_AOD data ------------
-# ##################################################################
-
-# # unique_log_dir = f"./logs/latlon_AOD/{current_time}"
-# # unique_checkpoint_dir = f"./checkpoints/latlon_AOD/{current_time}"
-# # Training = NPTrainer(
-# #     model=model_latlon_AOD,
-# #     optimizer=Optimizer_latlong_AOD,
-# #     loss_fn=Loss,
-# #     device="cpu",
-# #     log_dir=unique_log_dir,
-# #     checkpoint_dir=unique_checkpoint_dir,
-# # )
-# # #  running the epochs.
-# # #  ... definitions above ...
-
-# # #  Define a "best loss" to track improvement
-# # best_val_loss = float("inf")
-# # #
-# # for epoch in range(100):  # Run for 100 epochs
-# #     # 1. TRAIN
-# #     train_loss = Training.train_epoch(dataloader_latlon_AOD, epoch)
-# #     # 2. VALIDATE (Call the function we just wrote)
-# #     val_loss = validation_function(
-# #         model=model_latlon_AOD,  # Access model from your Trainer class
-# #         val_dataloader=dataloader_val_latlon_AOD,  # You need a separate loader for val data
-# #         loss_fn=Loss,
-# #         device="cpu",
-# #     )
-# #     print(f"Epoch {epoch} | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}")
-# #     # 3. SAVE ONLY IF BETTER
-# #     if val_loss < best_val_loss:
-# #         best_val_loss = val_loss
-# #         Training.save_checkpoint(epoch)
-# #         print(f"   >>> SAVED: New best model found!")
-
-
-# # ##################################################################
-# # # -------------Training of Lat_Lon_PM25 data
-# # ##################################################################
-# # current_time = datetime.now().strftime("%Y%m%d-%H%M%S")
-# # unique_log_dir = f"./logs/latlon_PM25/{current_time}"
-# # unique_checkpoint_dir = f"./checkpoints/latlon_PM25/{current_time}"
-# # Training = NPTrainer(
-# #     model=model_latlon_PM25,
-# #     optimizer=Optimizer_latlong_PM25,
-# #     loss_fn=Loss,
-# #     device="cpu",
-# #     log_dir=unique_log_dir,
-# #     checkpoint_dir=unique_checkpoint_dir,
-# # )
-# # #  running the epochs.
-# # #  ... definitions above ...
-
-# # #  Define a "best loss" to track improvement
-# # best_val_loss = float("inf")
-# # #
-# # for epoch in range(100):  # Run for 100 epochs
-# #     # 1. TRAIN
-# #     train_loss = Training.train_epoch(dataloader_latlon_PM25, epoch)
-# #     # 2. VALIDATE (Call the function we just wrote)
-# #     val_loss = validation_function(
-# #         model=model_latlon_PM25,  # Access model from your Trainer class
-# #         val_dataloader=dataloader_val_latlon_PM25,  # You need a separate loader for val data
-# #         loss_fn=Loss,
-# #         device="cpu",
-# #     )
-# #     print(f"Epoch {epoch} | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}")
-# #     # 3. SAVE ONLY IF BETTER
-# #     if val_loss < best_val_loss:
-# #         best_val_loss = val_loss
-# #         Training.save_checkpoint(epoch)
-# #         print(f"   >>> SAVED: New best model found!")
-
-
-# ################################################################
-# # Training on lat_lon data set
-# ##################################################################
-# current_time = datetime.now().strftime("%Y%m%d-%H%M%S")
-# # we store the logs to store the losses to plot for the tensorboard.
-# unique_log_dir = f"./logs/latlon/{current_time}"
-# unique_checkpoint_dir = f"./checkpoints/latlon/{current_time}"
-# Training = NPTrainer(
-#     model=model_latlon,
-#     optimizer=Optimizer_latlong,
-#     loss_fn=Loss,
-#     device="cpu",
-#     log_dir=unique_log_dir,
-#     checkpoint_dir=unique_checkpoint_dir,
-# )
-# #  running the epochs.
-# #  ... definitions above ...
-
-# #  Define a "best loss" to track improvement
-# best_val_loss = float("inf")
-# #
-# for epoch in range(10):  # Run for 100 epochs
-#     # 1. TRAIN
-#     train_loss = Training.train_epoch(dataloader_latlon, epoch)
-#     # 2. VALIDATE (Call the function we just wrote)
-#     val_loss = validation_function(
-#         model=Training.model,  # Access model from your Trainer class
-#         val_dataloader=dataloader_val_latlon,  # You need a separate loader for val data
-#         loss_fn=Loss,
-#         device="cpu",
-#     )
-#     print(f"Epoch {epoch} | Train Loss: {train_loss:.4f} | Val Loss: {val_loss:.4f}")
-#     # 3. SAVE ONLY IF BETTER
-#     if val_loss < best_val_loss:
-#         best_val_loss = val_loss
-#         Training.save_checkpoint(epoch)
-#         print(f"   >>> SAVED: New best model found!")
-
-
-# # Loadign the model and then plottign the curvs..............
